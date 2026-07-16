@@ -1203,7 +1203,17 @@ a.txt{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
 
   <section class="chap" id="s11">
     <div class="chap-head"><span class="no">A3</span><h3>claspで一歩先へ</h3></div>
-    <p>今日のGASは、Googleのエディタ上でAIに書いてもらう形でした。<br><strong>clasp</strong>を使うと、Claude Code / Codex上でGASのコードを直接編集・デプロイできます——「こういう風にGASを使う世界もある」と知っておくための、次のステージの紹介です。</p>
+    <p>今日のGASは、Googleのエディタ上でAIに書いてもらう形でした。<br>ここから先は、その一歩先——「こういう風にGASを使う世界もある」という紹介です。</p>
+
+    <h4>claspとは</h4>
+    <p><strong>clasp（クラスプ）は、Googleが公式に出しているコマンドラインツール</strong>です。<br>GASのコードを、あなたのPCとGoogle側とで同期してくれます。<br>Google自身が配っているものなので、その点は安心して使えます。</p>
+    <p>今日は、AIに書いてもらったコードを<strong>コピーして、GASエディタに貼り付け</strong>ました。<br>claspを入れると、この往復がなくなります。<br>Claude Code / Codexがコードを直接書き換え、コマンド1つでGoogle側に反映されます。</p>
+    <div class="tblwrap"><table>
+      <tr><th>できること</th><th>どういうことか</th></tr>
+      <tr><td><b>コピペの往復が消える</b></td><td>AIがGASのコードを直接書き換える。エディタに貼り付ける手作業がなくなる</td></tr>
+      <tr><td><b>コードが手元に残る</b></td><td>ファイルとしてPCに置ける＝AIがコード全体を読んで直せる。変更の履歴も残せる</td></tr>
+      <tr><td><b>反映も取り込みも1コマンド</b></td><td><code>clasp push</code>で手元の変更をGoogleへ送る／<code>clasp pull</code>でGAS側の変更を手元に取り込む</td></tr>
+    </table></div>
     <div class="callout"><span class="ct">当日は紹介のみ</span>
       Node.js導入・clasp login・Apps Script API有効化など、環境ごとの分岐が増えるため、当日ハンズオンでは手を動かしません。<br>ここから先は持ち帰って、自分のペースで試してください。
     </div>
@@ -1215,8 +1225,22 @@ a.txt{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
       <li><code>clasp login</code>を実行し、ブラウザでGoogleアカウントにログインする</li>
     </ol>
 
-    <h4>新しいGASプロジェクトをclaspで作る</h4>
+    <h4>今日のスプレッドシートを、そのまま触る（clasp clone）</h4>
+    <p>今日マスキングGASを書き込んだ、あのスプレッドシートの続きをやる場合はこちらです。<br>まず、スプレッドシート側のスクリプトIDを調べます。</p>
+    <ol class="steps">
+      <li>スプレッドシートの「拡張機能」→「Apps Script」でエディタを開く</li>
+      <li>左サイドバーの⚙️（プロジェクトの設定）を開く</li>
+      <li>「スクリプトID」をコピーする</li>
+    </ol>
     <p>Claude Code / Codexの作業フォルダの中で、次のコマンドを実行します。</p>
+    <div class="copywrap">
+      <div class="copyhead"><span class="fn">既存プロジェクトを手元に落とす</span><button class="copybtn" type="button">コピー</button></div>
+      <pre class="copy">clasp clone コピーしたスクリプトID</pre>
+    </div>
+    <p>今日のGASのコードが、手元にファイルとして落ちてきます。<br>あとはClaude Code / Codexに「この機能を追加して」と頼み、<code>clasp push --force</code>でスプレッドシート側に反映するだけです。</p>
+
+    <h4>ゼロから新しく作る（clasp create）</h4>
+    <p>新しいスプレッドシートごと作る場合は、作業フォルダの中で次を実行します。</p>
     <div class="copywrap">
       <div class="copyhead"><span class="fn">新規プロジェクト作成</span><button class="copybtn" type="button">コピー</button></div>
       <pre class="copy">clasp create --type sheets --title "プロジェクト名"
