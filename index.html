@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>効率化を、仕組みに変える。ハンズオンガイド | SHIFT AI</title>
+<meta name="description" content="2026年7月18日（土）集中講義「効率化を、仕組みに変える。〜AIエージェントで作る、時短実践合宿〜」の参加者向けハンズオンガイド。当日の全ワーク解説・転用例集・skill化プロンプト例・clasp実装ガイド。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============ design tokens ============ */
+:root{
+  --ink:#2A2E3D;
+  --ink-sub:#5C6178;
+  --ink-faint:#8A8FA3;
+  --paper:#FFFFFF;
+  --paper-warm:#FAF6EC;
+  --line:#E2DDCB;
+  --line-soft:#EEEAE0;
+  --accent:#B8860B;
+  --accent-soft:#F5EBD3;
+  --accent-mid:#C2661E;
+  --ok:#0E8A6E;
+  --ok-soft:#E3F3EF;
+  --bad:#B33A3A;
+  --bad-soft:#F7E7E4;
+  --tool:#4A5A8A;
+  --tool-soft:#EAEEF7;
+  --mono:"IBM Plex Mono","Noto Sans JP",monospace;
+  --sans:"Noto Sans JP",-apple-system,BlinkMacSystemFont,sans-serif;
+  --w-text:44rem;
+  --sp-1:8px; --sp-2:16px; --sp-3:24px; --sp-4:32px; --sp-6:48px; --sp-8:64px; --sp-12:96px;
+  --block:#1A2038;
+  --accent-on-dark:#F0C878;
+  --radius:6px;
+  /* header/tabbar専用（ここだけダークネイビー×ゴールドを維持） */
+  --head-bg:#0A0E1A;
+  --head-line:#2B3350;
+  --head-ink:#EDEEF3;
+  --head-ink-sub:#9AA0BC;
+  --head-accent:#D9A544;
+  --head-accent-soft:rgba(217,165,68,.16);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:132px}
+body{
+  font-family:var(--sans);
+  font-feature-settings:"palt";
+  color:var(--ink);
+  background:var(--paper);
+  line-height:1.95;
+  font-size:16px;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--accent-soft)}
+.measure{max-width:var(--w-text);margin:0 auto;padding:0 var(--sp-3)}
+
+/* ============ site header（ダークネイビー×ゴールドを維持） ============ */
+.head{
+  background:var(--head-bg);
+  border-bottom:1px solid var(--head-line);
+  padding:var(--sp-3) 0 var(--sp-2);
+}
+.head .inner{max-width:var(--w-text);margin:0 auto;padding:0 var(--sp-3)}
+.head .brand{
+  position:relative;padding-left:13px;display:inline-block;
+  font-family:var(--mono);font-size:11px;letter-spacing:.22em;
+  color:var(--head-accent);font-weight:700;text-transform:uppercase;
+}
+.head .brand::before{content:"";position:absolute;left:0;top:1px;bottom:1px;width:4px;background:var(--head-accent);border-radius:2px}
+.head h1{font-size:clamp(19px,3vw,24px);font-weight:900;line-height:1.5;margin:4px 0 2px;color:var(--head-ink)}
+.head .date{font-size:12px;color:var(--head-ink-sub);font-family:var(--mono);letter-spacing:.08em}
+
+/* ============ tab bar（ヘッダーと同じダーク系で連続させる） ============ */
+.tabbar{
+  position:sticky;top:0;z-index:20;
+  background:rgba(10,14,26,.92);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--head-line);
+}
+.tabbar .inner{
+  max-width:var(--w-text);margin:0 auto;padding:0 var(--sp-3);
+  display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;
+}
+.tabbar .inner::-webkit-scrollbar{display:none}
+.tab{
+  appearance:none;border:0;background:none;cursor:pointer;
+  font-family:var(--sans);font-size:13.5px;font-weight:500;color:var(--head-ink-sub);
+  padding:14px 14px 12px;white-space:nowrap;position:relative;
+  border-bottom:2px solid transparent;line-height:1.4;
+}
+.tab .tno{font-family:var(--mono);font-size:10px;color:var(--head-ink-sub);margin-right:6px;letter-spacing:.06em;opacity:.75}
+.tab:hover{color:var(--head-ink)}
+.tab.on{color:var(--head-accent);font-weight:700;border-bottom-color:var(--head-accent);background:var(--head-accent-soft);border-radius:var(--radius) var(--radius) 0 0}
+.tab.on .tno{color:var(--head-accent);opacity:1}
+
+/* ============ panels ============ */
+.panel{display:none;padding-bottom:var(--sp-8)}
+.panel.on{display:block}
+.panel-head{position:relative;background:var(--paper-warm);border:1px solid var(--line-soft);border-left:4px solid var(--accent);border-radius:0 var(--radius) var(--radius) 0;padding:var(--sp-4) var(--sp-4) var(--sp-3);margin:var(--sp-6) 0 var(--sp-4)}
+.panel-head .kicker{
+  font-family:var(--mono);font-size:11px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--accent);font-weight:700;display:block;
+}
+.panel-head h2{font-size:clamp(23px,3.4vw,30px);font-weight:900;line-height:1.4;margin-top:6px}
+.panel-head .desc{font-size:14px;color:var(--ink-sub);margin-top:8px;max-width:36em}
+
+/* in-panel local index */
+.local{
+  display:flex;flex-wrap:wrap;gap:8px;margin:var(--sp-3) 0 0;
+}
+.local a{
+  font-size:12.5px;color:var(--ink-sub);text-decoration:none;
+  border:1px solid var(--line-soft);border-radius:999px;padding:4px 14px;
+  background:var(--paper-warm);
+}
+.local a:hover{border-color:var(--accent);color:var(--accent)}
+.local a b{font-family:var(--mono);font-weight:500;font-size:11px;margin-right:6px;color:var(--ink-faint)}
+
+/* ============ sections ============ */
+section.chap{padding:var(--sp-4) 0 0}
+.chap-head{display:flex;align-items:baseline;gap:var(--sp-2);border-bottom:1px solid var(--line-soft);padding-bottom:var(--sp-1);margin-bottom:var(--sp-3)}
+.chap-head .no{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:.08em;background:var(--accent-soft);padding:3px 9px;border-radius:4px;font-weight:500}
+.chap-head h3{font-size:clamp(18px,2.4vw,21px);font-weight:900;line-height:1.5;margin:0}
+.chap-head .when{margin-left:auto;font-size:11.5px;color:var(--ink-faint);white-space:nowrap}
+h4{
+  font-size:16.5px;font-weight:800;line-height:1.6;
+  margin:var(--sp-6) 0 var(--sp-2);
+  background:var(--block);color:#FFFFFF;
+  padding:10px 18px;border-radius:var(--radius);
+}
+h4 .h4no{color:var(--accent-on-dark);font-family:var(--mono);font-size:12.5px;margin-right:8px}
+h4 .wk{display:inline-block;background:var(--accent-on-dark);color:#1A2038;font-size:13px;font-weight:800;padding:2px 12px;border-radius:999px;margin-right:10px;vertical-align:2px;white-space:nowrap}
+.tooltag{font-size:13px;color:var(--ink-sub);font-weight:700;margin:-6px 0 var(--sp-2);padding:6px 18px 0}
+.tooltag b{color:var(--tool)}
+p{margin:0 0 var(--sp-2)}
+p.note{font-size:13.5px;color:var(--ink-sub)}
+strong{font-weight:700}
+em{font-style:normal;background:linear-gradient(transparent 68%,var(--accent-soft) 68%);font-weight:700}
+code{font-family:var(--mono);font-size:.92em}
+
+/* ============ setup link cards（インストール手順への外部リンク） ============ */
+.setup2{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-2);margin:var(--sp-2) 0 var(--sp-3)}
+@media(max-width:640px){.setup2{grid-template-columns:1fr}}
+.scard{border:1px solid var(--line-soft);border-radius:var(--radius);overflow:hidden;background:var(--paper);box-shadow:0 1px 4px rgba(42,46,61,.06)}
+.scard .shead{background:var(--block);color:#fff;font-weight:800;font-size:15px;padding:12px 18px;line-height:1.5}
+.scard .shead .ic{font-family:var(--mono);font-weight:500;margin-right:10px;opacity:.85}
+.scard.codex .shead{background:var(--tool)}
+.scard .sbody{padding:var(--sp-2) 18px var(--sp-3)}
+.scard .sbody p{font-size:13.5px;color:var(--ink-sub);margin:0 0 var(--sp-2)}
+.btnlink{display:inline-block;background:var(--accent-mid);color:#fff;font-weight:700;font-size:14px;text-decoration:none;padding:10px 22px;border-radius:var(--radius)}
+.btnlink:hover{opacity:.88}
+.btnlink::before{content:"↗";margin-right:8px;font-weight:400}
+.jumplink{
+  display:inline-flex;align-items:center;gap:6px;
+  border:1px solid var(--accent);border-radius:999px;
+  color:var(--accent);font-weight:700;font-size:13px;
+  text-decoration:none;padding:8px 16px;margin-top:var(--sp-1);
+}
+.jumplink:hover{background:var(--accent-soft)}
+.jumplink::after{content:"→"}
+
+/* ============ steps ============ */
+ol.steps{list-style:none;counter-reset:st;margin:var(--sp-3) 0}
+ol.steps>li{
+  counter-increment:st;position:relative;
+  padding:var(--sp-2) 0 var(--sp-2) 52px;border-top:1px solid var(--line-soft);
+}
+ol.steps>li:last-child{border-bottom:1px solid var(--line-soft)}
+ol.steps>li::before{
+  content:counter(st,decimal-leading-zero);
+  position:absolute;left:0;top:15px;width:30px;height:30px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--accent-soft);border-radius:50%;
+  font-family:var(--mono);font-size:12px;color:var(--accent);font-weight:700;
+}
+ul.plain{margin:var(--sp-2) 0 var(--sp-2) 1.2em}
+ul.plain li{margin-bottom:10px}
+
+/* ============ callouts ============ */
+.callout{
+  border-left:3px solid var(--accent);background:var(--paper-warm);
+  padding:var(--sp-2) var(--sp-3);margin:var(--sp-3) 0;font-size:14.5px;
+  border-radius:0 var(--radius) var(--radius) 0;
+}
+.callout.ok{border-left-color:var(--ok);background:var(--ok-soft)}
+.callout.tool{border-left-color:var(--tool);background:var(--tool-soft)}
+.callout.ng{border-left-color:#C0392B;background:#FBEDEA;color:#8E2418}
+.callout .ct{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;
+  color:var(--accent);display:block;margin-bottom:4px;font-weight:500;
+}
+.callout.ok .ct{color:var(--ok)}
+.callout.tool .ct{color:var(--tool)}
+.callout.ng .ct{color:#C0392B}
+
+/* ============ copy block ============ */
+.copywrap{position:relative;margin:var(--sp-3) 0}
+.copyhead{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:#050810;color:#fff;border-radius:var(--radius) var(--radius) 0 0;
+  padding:8px 14px;font-size:12px;
+}
+.copyhead .fn{font-family:var(--mono);letter-spacing:.04em;color:#C2C2C2;line-height:1.5}
+.copybtn{
+  font-family:var(--sans);font-size:12px;font-weight:700;flex-shrink:0;
+  background:transparent;color:#fff;border:1px solid #707070;border-radius:4px;
+  padding:4px 12px;cursor:pointer;transition:.15s;
+}
+.copybtn:hover{border-color:#fff}
+.copybtn.done{background:var(--ok);border-color:var(--ok)}
+pre.copy{
+  background:var(--paper-warm);border:1px solid var(--line-soft);border-top:0;
+  border-radius:0 0 var(--radius) var(--radius);
+  padding:var(--sp-3);overflow-x:auto;
+  font-family:var(--mono);font-size:13px;line-height:1.85;color:var(--ink);
+  white-space:pre-wrap;word-break:break-word;
+}
+
+/* ============ tables ============ */
+.tblwrap{overflow-x:auto;margin:var(--sp-3) 0}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{
+  text-align:left;font-size:11.5px;letter-spacing:.1em;color:var(--ink-faint);
+  font-weight:500;border-bottom:1px solid var(--ink);padding:8px 12px 8px 0;
+  font-family:var(--mono);white-space:nowrap;
+}
+td{border-bottom:1px solid var(--line-soft);padding:12px 12px 12px 0;vertical-align:top;line-height:1.8}
+td b{color:var(--accent)}
+
+/* ============ figure / screenshot slot ============ */
+figure.shot{margin:var(--sp-3) 0}
+figure.shot .ph{
+  border:1px dashed var(--line);border-radius:var(--radius);
+  background:repeating-linear-gradient(-45deg,var(--paper-warm) 0 12px,var(--paper) 12px 24px);
+  min-height:110px;display:flex;align-items:center;justify-content:center;
+  color:var(--ink-faint);font-size:12.5px;letter-spacing:.06em;text-align:center;padding:12px;
+}
+figure.shot.hero img{width:100%;border:1px solid var(--head-line);border-radius:var(--radius);display:block}
+figure.shot.hero{margin:var(--sp-3) 0 0}
+figure.shot img{width:100%;border:2px solid var(--accent);border-radius:var(--radius);display:block}
+figure.shot figcaption{font-size:12px;color:var(--ink-faint);margin-top:6px}
+
+/* ============ 当日のワーク：作業①〜⑧の追従目次 ============ */
+.worktoc{
+  position:sticky;top:var(--tabbar-h,52px);z-index:15;
+  background:var(--paper);border-bottom:1px solid var(--line-soft);
+  padding:8px 0;margin-bottom:var(--sp-3);
+}
+.worktoc-inner{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.worktoc-inner::-webkit-scrollbar{display:none}
+.worktoc a{
+  flex-shrink:0;text-decoration:none;
+  border:1px solid var(--line-soft);border-radius:999px;
+  font-family:var(--mono);font-size:12px;font-weight:700;color:var(--ink-sub);
+  padding:6px 12px;white-space:nowrap;transition:border-color .12s,background .12s,color .12s;
+}
+.worktoc a:hover{border-color:var(--accent);color:var(--accent)}
+.worktoc a.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+h4[id^="work"]{scroll-margin-top:calc(var(--tabbar-h,52px) + var(--worktoc-h,44px) + 8px)}
+
+/* ============ FAQ ============ */
+details{border-top:1px solid var(--line-soft)}
+details:last-of-type{border-bottom:1px solid var(--line-soft)}
+summary{
+  cursor:pointer;list-style:none;display:flex;gap:14px;align-items:baseline;
+  padding:var(--sp-2) 4px;font-weight:700;font-size:15px;line-height:1.6;
+}
+summary::-webkit-details-marker{display:none}
+summary .q{font-family:var(--mono);color:var(--accent);font-size:13px}
+summary::after{content:"＋";margin-left:auto;color:var(--ink-faint);font-weight:400}
+details[open] summary::after{content:"−"}
+details .a{padding:0 4px var(--sp-3) 34px;font-size:14.5px;color:var(--ink-sub)}
+
+/* ============ misc ============ */
+.goal{
+  background:var(--block);border:0;border-left:4px solid var(--accent);
+  border-radius:0 var(--radius) var(--radius) 0;
+  padding:var(--sp-4);margin:var(--sp-4) 0;color:#fff;
+}
+.goal .ct{font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;color:var(--accent-on-dark);font-weight:700}
+.goal p{margin:8px 0 0;font-size:17px;font-weight:700;line-height:1.8;color:#fff}
+.goal p small{display:block;font-size:13px;font-weight:400;color:rgba(255,255,255,.72);margin-top:8px}
+.flowline{font-family:var(--mono);font-size:12.5px;color:var(--ink-sub);background:var(--paper-warm);border:1px solid var(--line-soft);border-radius:var(--radius);padding:var(--sp-2) var(--sp-3);margin:var(--sp-3) 0;line-height:2;overflow-x:auto;white-space:nowrap}
+.flowline b{color:var(--accent);font-weight:500}
+
+/* ============ diagrams ============ */
+.duo{display:grid;grid-template-columns:1fr auto 1fr;gap:var(--sp-2);align-items:stretch;margin:var(--sp-3) 0}
+.duo .side{border:1px solid var(--line-soft);border-radius:var(--radius);padding:var(--sp-2) var(--sp-3);background:var(--paper-warm)}
+.duo .side.hero{border-color:var(--accent);background:var(--accent-soft)}
+.duo .lb{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;color:var(--ink-faint);display:block;margin-bottom:6px;font-weight:500}
+.duo .side.hero .lb{color:var(--accent)}
+.duo .big{font-weight:900;font-size:15px;line-height:1.7;display:block}
+.duo .side p{font-size:12.5px;color:var(--ink-sub);margin:8px 0 0;line-height:1.8}
+.duo .mid{align-self:center;color:var(--accent);font-family:var(--mono);font-size:16px;padding:0 2px}
+
+.proc{display:flex;align-items:stretch;gap:0;margin:var(--sp-3) 0;overflow-x:auto;padding-bottom:4px}
+.proc .st{flex:1;min-width:110px;border:1px solid var(--line-soft);border-radius:var(--radius);padding:12px 12px;background:var(--paper-warm)}
+.proc .st .n{font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:.14em;display:block;font-weight:500}
+.proc .st .t{font-weight:700;font-size:13.5px;line-height:1.55;display:block;margin-top:3px}
+.proc .st small{font-size:11.5px;color:var(--ink-sub);line-height:1.65;display:block;margin-top:4px}
+.proc .ar{align-self:center;color:var(--accent);font-family:var(--mono);padding:0 6px;flex-shrink:0}
+
+.cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-2);margin:var(--sp-3) 0}
+.cards3 .c{border:1px solid var(--line-soft);border-radius:var(--radius);padding:14px 16px;background:var(--paper-warm)}
+.cards3 .c .n{font-family:var(--mono);font-size:10.5px;color:var(--accent);letter-spacing:.14em;display:block;font-weight:500}
+.cards3 .c .t{font-weight:700;font-size:13.5px;line-height:1.6;display:block;margin-top:4px}
+.cards3 .c small{font-size:11.5px;color:var(--ink-sub);line-height:1.65;display:block;margin-top:4px}
+
+.cards4{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-2);margin:var(--sp-3) 0}
+.cards4.subnav .cc{cursor:pointer;transition:border-color .12s,background .12s;user-select:none}
+.cards4.subnav .cc:hover{border-color:var(--accent)}
+.cards4.subnav .cc.on{border-color:var(--accent);background:var(--accent-soft)}
+.cards4 .cc{border:1px solid var(--line-soft);border-radius:var(--radius);padding:14px 16px;background:var(--paper-warm)}
+.cards4 .cc .nm{font-weight:900;font-size:14px}
+.cards4 .cc .dots{font-size:11px;color:var(--ink-sub);margin-top:6px;display:block}
+.subpane2{display:none}
+.subpane2.on{display:block}
+
+/* ============ ダッシュボードの公開方法：カード＝サブタブ切り替え ============ */
+.pubgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--sp-2);margin:var(--sp-3) 0}
+.pubgrid.subnav .pc{cursor:pointer;transition:border-color .12s,background .12s;user-select:none}
+.pubgrid.subnav .pc:hover{border-color:var(--accent)}
+.pubgrid.subnav .pc.on{border-color:var(--accent);background:var(--accent-soft)}
+.pubgrid .pc{border:1px solid var(--line-soft);border-radius:var(--radius);padding:16px;background:#fff}
+.pubgrid .pc.reco{border-color:var(--accent)}
+.pubgrid .pc .nm{font-weight:900;font-size:15px}
+.pubgrid .pc .reco-tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;color:var(--accent);border:1px solid var(--accent);border-radius:3px;padding:1px 6px;margin-left:8px;vertical-align:2px}
+.pubgrid .pc .dots{font-size:11px;color:var(--ink-sub);margin-top:6px;display:block}
+.pubgrid .pc .dots b{color:var(--accent);letter-spacing:2px;font-weight:400}
+.pubgrid .pc p{font-size:12px;color:var(--ink-sub);margin:8px 0 0;line-height:1.7}
+.pubpane{display:none}
+.pubpane.on{display:block}
+@media (max-width:640px){.pubgrid{grid-template-columns:1fr}}
+
+/* ============ 適材適所マップ・タップ選択→その場で答え合わせ ============ */
+.maptable td.pick{padding-top:10px;padding-bottom:10px}
+.chipset{display:flex;flex-wrap:wrap;gap:6px}
+.chip{
+  appearance:none;border:1px solid var(--line-soft);border-radius:999px;
+  background:var(--paper-warm);color:var(--ink-sub);
+  font-family:var(--sans);font-size:12.5px;font-weight:700;
+  padding:6px 14px;cursor:pointer;transition:border-color .12s,background .12s,color .12s;
+}
+.chip:hover{border-color:var(--accent)}
+.chip.sel{border-color:var(--accent);background:var(--accent-soft);color:var(--ink)}
+.maptable.checked .chip{cursor:default;pointer-events:none}
+.maptable.checked .chip.sel.correct{border-color:var(--ok);background:var(--ok-soft);color:var(--ok)}
+.maptable.checked .chip.sel.wrong{border-color:var(--bad);background:var(--bad-soft);color:var(--bad)}
+.maptable.checked .chip.answer{border-color:var(--ok);color:var(--ok)}
+.verdict{display:block;margin-top:6px;font-size:12px;color:var(--ink-sub);min-height:1.4em}
+.verdict.correct{color:var(--ok)}
+.verdict.wrong{color:var(--bad)}
+.mapctrls{display:flex;gap:10px;flex-wrap:wrap;margin-top:var(--sp-2)}
+.checkbtn{
+  appearance:none;border:1px solid var(--accent);border-radius:var(--radius);
+  background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:13px;
+  padding:9px 20px;cursor:pointer;font-family:var(--sans);
+}
+.checkbtn:hover{background:var(--accent);color:#fff}
+.checkbtn.ghost{background:transparent;color:var(--ink-sub);border-color:var(--line-soft)}
+.checkbtn.ghost:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.mapmsg{font-size:12.5px;color:var(--ink-faint);margin-top:8px}
+
+/* ============ 価値換算：ライブ計算フォーム ============ */
+.calc{border:1px solid var(--line-soft);border-radius:var(--radius);background:var(--paper-warm);padding:var(--sp-3);margin:var(--sp-3) 0}
+.calc-row{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:var(--sp-2)}
+.calc-row label{flex:1;min-width:150px;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ink-sub);font-family:var(--mono)}
+.calc-row input,.calc-row select{
+  font-family:var(--sans);font-size:14px;color:var(--ink);
+  border:1px solid var(--line-soft);border-radius:var(--radius);
+  background:var(--paper);padding:8px 10px;
+}
+.calc-row input:focus,.calc-row select:focus{outline:none;border-color:var(--accent)}
+.calc-result{border-top:1px dashed var(--line-soft);margin-top:var(--sp-1);padding-top:var(--sp-2);display:flex;flex-direction:column;gap:6px}
+.calc-result .r-line{font-size:14px;color:var(--ink-sub)}
+.calc-result b{color:var(--ink);font-weight:700}
+.calc-result .big{color:var(--accent);font-size:18px}
+@media (max-width:640px){.calc-row label{min-width:100%}}
+
+/* ============ 分解／変換：壁から2つに分岐する図 ============ */
+.walltwo{margin:var(--sp-3) 0}
+.walltwo .wall{
+  border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--paper-warm);padding:10px 16px;text-align:center;
+  font-size:13.5px;color:var(--ink-sub);
+}
+.walltwo .wall b{color:var(--ink);font-weight:700}
+.walltwo .arrows{display:flex;justify-content:space-around;color:var(--accent);font-family:var(--mono);font-size:20px;line-height:1;padding:4px 0}
+.walltwo .branches{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-2)}
+.walltwo .branch{border:1.5px solid var(--accent);border-radius:var(--radius);padding:14px 16px;background:#fff}
+.walltwo .branch .lb{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--accent);font-weight:700;display:block}
+.walltwo .branch .t{font-weight:900;font-size:14.5px;display:block;margin-top:4px;line-height:1.6}
+.walltwo .branch small{font-size:11.5px;color:var(--ink-sub);display:block;margin-top:6px;line-height:1.7}
+@media (max-width:640px){.walltwo .branches{grid-template-columns:1fr}}
+
+@media (max-width:640px){
+  .duo{grid-template-columns:1fr}
+  .duo .mid{transform:rotate(90deg);justify-self:center;padding:2px 0}
+  .cards3,.cards4{grid-template-columns:1fr}
+}
+
+/* 文節単位の折り返し：.uで囲んだまとまりの途中では改行させない（HTML制作_デザイン原則.md 原則1-②） */
+/* CJK文字はdisplay:inline-blockだけでは内部でも改行されうるため、white-space:nowrapを併用する */
+.u{display:inline-block;white-space:nowrap}
+
+/* 和文の1文字落ち対策：見出し・カード類は行長を均等化、本文は末尾の孤立を回避 */
+h1,h2,h3,h4,
+.duo .big,.duo .side p,
+.proc .st .t,.proc .st small,
+.cards3 .c .t,.cards3 .c small,
+.cards4 .cc .nm,
+.walltwo .branch .t,.walltwo .branch small,
+.goal p{text-wrap:balance}
+p,li,details .a,.callout,td{text-wrap:pretty}
+
+/* prev/next pager */
+.pager{
+  display:flex;justify-content:space-between;gap:var(--sp-2);
+  margin-top:var(--sp-8);border-top:1px solid var(--line);padding-top:var(--sp-3);
+}
+.pager button{
+  appearance:none;border:1px solid var(--line);background:var(--paper-warm);border-radius:var(--radius);
+  font-family:var(--sans);font-size:13px;color:var(--ink);cursor:pointer;
+  padding:12px 18px;line-height:1.6;text-align:left;max-width:48%;
+}
+.pager button:hover{border-color:var(--accent);color:var(--accent)}
+.pager button small{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--ink-faint)}
+.pager .next{text-align:right;margin-left:auto}
+
+footer.site{
+  border-top:1px solid var(--line);
+  padding:var(--sp-4) 0 var(--sp-6);font-size:12px;color:var(--ink-faint);
+}
+a.txt{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+
+@media (max-width:640px){
+  body{font-size:15px}
+  .tab{padding:12px 10px 10px;font-size:12.5px}
+  .pager button{max-width:100%}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<header class="head">
+  <div class="inner">
+    <span class="brand">SHIFT AI / Hands-on Guide</span>
+    <h1>効率化を、仕組みに変える。ハンズオンガイド</h1>
+    <p class="date"><span class="u">2026.7.18 SAT 10:00–16:00</span> ／ <span class="u">時短実践合宿（中級者向け）</span></p>
+    <figure class="shot hero"><img src="0718サムネ.png" alt="SHIFT AI 3周年記念イベント「時短が、時短を呼ぶ。」AIエージェントで仕組みを作る集中講義（中級者向け・参加無料）2026/7/18(土)10:00〜16:00"></figure>
+  </div>
+</header>
+
+<nav class="tabbar" aria-label="ガイドのタブ">
+  <div class="inner" role="tablist">
+    <button class="tab on" role="tab" data-tab="t0"><span class="tno">01</span>全体像</button>
+    <button class="tab" role="tab" data-tab="t1"><span class="tno">02</span>事前準備</button>
+    <button class="tab" role="tab" data-tab="t2"><span class="tno">03</span>当日のワーク</button>
+    <button class="tab" role="tab" data-tab="t3"><span class="tno">04</span>講義のあと</button>
+    <button class="tab" role="tab" data-tab="t4"><span class="tno">05</span>FAQ</button>
+  </div>
+</nav>
+
+<div class="measure">
+
+<!-- ==================== TAB 1: 全体像 ==================== -->
+<div class="panel on" id="t0">
+  <div class="panel-head">
+    <span class="kicker">Overview</span>
+    <h2>今日、何を持ち帰るのか</h2>
+    <p class="desc">当日の手順は「当日のワーク」タブに全部載せています。<br>ここではまず、この1日で持ち帰ってほしいことを伝えます。</p>
+  </div>
+
+  <div class="goal">
+    <span class="ct">TODAY'S GOAL</span>
+    <p><span class="u">「渡せない」を</span><span class="u">「どう渡すか」に</span><span class="u">変える。</span><br><span class="u">分解と変換で、</span><span class="u">仕組みと価値を</span><span class="u">生む側に回る、</span><span class="u">その第一歩を</span><span class="u">体験しきる。</span>
+    <small>今日は共通のお題（顧客アンケート処理）を使って、これを実物として1本やりきります。<br>翌月分のデータが来た想定も差し込み、複利まで確認します。</small></p>
+  </div>
+
+  <h4>今日の入口：AIで時短したのに、なぜ忙しさは変わらないのか</h4>
+  <p>「業務を1つAIで時短できた」経験がある人は多いはずです。<br>でも、忙しさも成果も変わらない——なぜか。<br><strong>浮いた時間が、また別の作業で埋まっているから</strong>です。<br>作業をこなす人のままでは、何を時短しても構造は変わりません。</p>
+
+  <div class="duo">
+    <div class="side">
+      <span class="lb">BEFORE ── 作業する人</span>
+      <span class="big"><span class="u">時短しても</span><span class="u">また作業で</span><span class="u">埋まる</span></span>
+      <p><span class="u">単発の効率化が</span><span class="u">単発のまま</span><span class="u">終わる。</span><br><span class="u">積み上がらず、</span><span class="u">複利が</span><span class="u">効かない。</span></p>
+    </div>
+    <span class="mid">→</span>
+    <div class="side hero">
+      <span class="lb">AFTER ── 仕組みと価値を生む人</span>
+      <span class="big"><span class="u">重心が</span><span class="u">仕組み側に</span><span class="u">移る</span></span>
+      <p><span class="u">浮いた時間を</span><span class="u">また仕組みづくりに</span><span class="u">再投資できる。</span><br><span class="u">時短が</span><span class="u">時短を呼ぶ。</span></p>
+    </div>
+  </div>
+  <p>今日のタイトル「時短が、時短を呼ぶ」は、この重心移動のことです。</p>
+
+  <h4>今日のキーワード：「分解」と「変換」</h4>
+  <p>自分の業務にAIを使おうとすると、必ず壁が出ます。<br>「個人情報が入っているから渡せない」「量が多すぎる」「品質が不安」——形はいろいろですが、正体は同じです。<br><strong>丸ごと渡そうとしている</strong>こと。</p>
+
+  <div class="walltwo">
+    <div class="wall"><b>壁</b>：丸ごと渡そうとしている</div>
+    <div class="arrows">↙　↘</div>
+    <div class="branches">
+      <div class="branch">
+        <span class="lb">分解</span>
+        <span class="t">渡せる工程だけを切り出す</span>
+        <small><span class="u">マスキングは</span><span class="u">GAS/VBAに</span>／<span class="u">分類・集計は</span><span class="u">エージェントに</span></small>
+      </div>
+      <div class="branch">
+        <span class="lb">変換</span>
+        <span class="t">渡せる形に加工する</span>
+        <small><span class="u">個人情報を</span><span class="u">"最悪漏れてもいい情報"に</span><span class="u">変える</span></small>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout"><span class="ct">今日いちばん持ち帰ってほしいこと</span>
+    壁に当たったら、「AIに渡せない」で止まらず「<strong>どうすれば渡せるか？</strong>」を考える。<br>やり方はこの2つしかありません。<br>今日は共通のお題でこれを1本、実物としてやりきります。
+  </div>
+
+  <h4>だから適材適所：何でもエージェントは罠</h4>
+  <p>「加工して渡す」と決めたら、その加工自体をAI（クラウド）にやらせては本末転倒です（生データが外に出てしまう）。</p>
+  <div class="tblwrap"><table>
+    <tr><th>工程</th><th>担当</th><th>理由</th></tr>
+    <tr><td><b>マスキング（個人情報を消す）</b></td><td>GAS（ルール通りに動く・Google内完結）</td><td>機械的・形式が明確。生データを外に出さない安全境界</td></tr>
+    <tr><td><b>分類・集計・ダッシュボード</b></td><td>Claude Code / Codex</td><td>判断・相談が要る＝任せどころ</td></tr>
+    <tr><td><b>最終確認</b></td><td>人</td><td>マスキングの取りこぼし（氏名・自由記述）を締める</td></tr>
+  </table></div>
+  <p class="note">「ツールの切れ目＝安全の切れ目」——何でもエージェントに投げないのが正解です。</p>
+
+  <h4>今日の流れ</h4>
+  <div class="tblwrap"><table>
+    <tr><th>時間帯</th><th>やること</th></tr>
+    <tr><td><b>午前・座学</b></td><td>なぜ分けるか（個人情報の誤解解消→適材適所→仕組み化＝複利）を腹落ちさせる</td></tr>
+    <tr><td><b>午後・実践</b></td><td>共通お題でGAS→分析スキル→ダッシュボードを一気通貫。翌月分データで複利を確認</td></tr>
+    <tr><td><b>最後</b></td><td>価値換算（月◯時間→年◯万円）＋自分の業務への横展開を1つ言語化</td></tr>
+  </table></div>
+
+  <div class="callout tool"><span class="ct">TOOLS ── Claude Code / Codex どちらでもOK</span>
+    今日のワークは<strong>Claude Code / Codexのどちらでも</strong>同じ手順で進められます。<br><strong>「依頼の型」自体がツール非依存</strong>だからです。<br>座学でもClaude Code・Codexそれぞれの実例を見せて、同じ型が両方で通ることを確認します。<br>細かい手順差が出る箇所は、本ガイドの各所にこの色のボックスで添えています。
+  </div>
+
+  <h4>覚えて帰る型（これだけ）</h4>
+  <div class="flowline">分解できるか？ <b>／</b> 変換できるか？ <b>→</b> 適材適所で組み合わせる <b>→</b> 仕組み化（複利）</div>
+  <p class="note">今日作るのはアンケート処理の仕組み1つですが、型は自分のどの業務にも応用できます。<br>「講義のあと」タブに転用例集を用意しています。</p>
+</div>
+
+<!-- ==================== TAB 2: 事前準備 ==================== -->
+<div class="panel" id="t1">
+  <div class="panel-head">
+    <span class="kicker">Before 7/18</span>
+    <h2>事前準備</h2>
+    <p class="desc">当日までに、この項目を済ませておいてください。<br>ここが済んでいれば当日は迷いません。</p>
+    <div class="callout"><span class="ct">前提</span>
+      当日のハンズオンは<strong>Claude Code / Codexのどちらかが起動できる環境</strong>が前提です。<br>Claude Codeの場合はClaude有料プラン契約が必要です（Freeプランでは進行できません）。<br>まだの方は当日までに契約・環境構築を済ませてください。
+    </div>
+  </div>
+
+  <section class="chap" id="s1">
+    <div class="chap-head"><span class="no">1</span><h3>Claude Code / Codexを起動できることを確認する</h3></div>
+    <ol class="steps">
+      <li>Claude有料プランを契約する（未契約の方）</li>
+      <li>Claude Codeを起動し、簡単なやりとりが1回できることを確認する</li>
+    </ol>
+    <div class="callout tool"><span class="ct">Codexで進める方へ</span>
+      当日は「両方OK」です。<br>Codexのデスクトップアプリが起動できることを、同じように事前に確認しておいてください。
+    </div>
+
+    <h4>インストールがまだの方へ（動画＋記事の手順ガイド）</h4>
+    <p>ダウンロードからセットアップまでの実際の手順を、動画と記事で確認できます。<br>使うツールの方を開いて、当日までに済ませておいてください。</p>
+    <div class="setup2">
+      <div class="scard">
+        <div class="shead"><span class="ic">&gt;_</span>Claude Code インストール手順</div>
+        <div class="sbody">
+          <p>Claude Codeの準備手順を確認できます。</p>
+          <a class="btnlink" href="https://ai-agent-support-portal.pages.dev/content/claude_setup" target="_blank" rel="noopener">記事を開く</a>
+        </div>
+      </div>
+      <div class="scard codex">
+        <div class="shead"><span class="ic">&lt;&gt;</span>Codex インストール手順</div>
+        <div class="sbody">
+          <p>Codexの準備手順を確認できます。</p>
+          <a class="btnlink" href="https://ai-agent-support-portal.pages.dev/content/codex_setup" target="_blank" rel="noopener">記事を開く</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chap" id="s2">
+    <div class="chap-head"><span class="no">2</span><h3>今日の作業フォルダを作る</h3></div>
+    <p>デスクトップなど、自分が見つけやすい場所に、今日専用のフォルダを1つ作ってください。</p>
+    <ul class="plain">
+      <li>フォルダ名の例：<code>0718時短実践合宿</code></li>
+      <li>当日ダウンロードするCSV・作らせるGAS・スキルは、ぜんぶこの中に入れます（迷子防止）</li>
+    </ul>
+  </section>
+
+  <section class="chap" id="s3">
+    <div class="chap-head"><span class="no">3</span><h3>拡張子（ファイル名の末尾）を表示しておく</h3></div>
+    <p>ファイル名の末尾が隠れていると、保存したファイルの種類が分からず当日の詰まりの元になります。<br>先に表示をONにしておきましょう。</p>
+    <ul class="plain">
+      <li><strong>Windows</strong>：エクスプローラー→「表示」→「表示」→「ファイル名拡張子」にチェック</li>
+      <li><strong>Mac</strong>：Finder→「設定」（⌘+,）→「詳細」タブ→「すべてのファイル名拡張子を表示」にチェック</li>
+    </ul>
+  </section>
+
+  <section class="chap" id="s4">
+    <div class="chap-head"><span class="no">4</span><h3>事前課題：効率化した業務を1つ持参する</h3></div>
+    <p>すでにAIで効率化した自分の業務を1つ、当日のために思い出しておいてください。<br>ハンズオン自体は共通のお題（注文データ＋顧客アンケートのコメント）で進めますが、<strong>後半の価値換算ワーク・「次に仕組みにする業務」の言語化</strong>で、あなた自身の業務を題材に使います。</p>
+  </section>
+
+  <div class="callout"><span class="ct">NOTE</span>
+    共通お題のデータ（テンプレートスプレッドシート）は、当日ガイドの中でリンクを案内します。<br>事前のダウンロードは不要です。
+  </div>
+</div>
+
+<!-- ==================== TAB 3: 当日のワーク ==================== -->
+<div class="panel" id="t2">
+  <div class="panel-head">
+    <span class="kicker">Workshop</span>
+    <h2>当日のワーク</h2>
+    <p class="desc">午後の実践パート、全ステップ。<br>当日はこのタブを開いたまま進めてください。</p>
+    <div class="local">
+      <a href="#s5"><b>W1</b>分解する・適材適所マップ</a>
+      <a href="#s6"><b>W2</b>マスキングGASを作る</a>
+      <a href="#s7"><b>W3</b>分析スキルを作る</a>
+      <a href="#s8"><b>W4</b>ダッシュボードと複利</a>
+    </div>
+  </div>
+
+  <nav class="worktoc" aria-label="作業ステップの目次">
+    <div class="worktoc-inner">
+      <a href="#work1" data-work="work1">①適材適所</a>
+      <a href="#work2" data-work="work2">②受取</a>
+      <a href="#work3" data-work="work3">③依頼</a>
+      <a href="#work4" data-work="work4">④実行</a>
+      <a href="#work5" data-work="work5">⑤スキル化</a>
+      <a href="#work6" data-work="work6">⑥可視化</a>
+      <a href="#work7" data-work="work7">⑦複利</a>
+      <a href="#work8" data-work="work8">⑧価値換算</a>
+    </div>
+  </nav>
+
+  <section class="chap" id="s5">
+    <div class="chap-head"><span class="no">W1</span><h3>このデータで何がしたいかを決め、分解する</h3></div>
+    <div class="callout ok"><span class="ct">✅ このワークのゴール</span>
+      「このデータで何を知りたいか」が1行で言えて、適材適所マップの<strong>全工程に担当が割り当たっている</strong>状態。
+    </div>
+
+    <h4>まず「何がしたいか」を決める</h4>
+    <p>GASを作り始める前に、<strong>このデータをAIに渡して何をしたいのか</strong>を決めます。</p>
+    <p><strong>なぜ最初に決めるのか</strong>——目的が決まって初めて、「要る列・要らない列」が決められるからです。<br>目的なしでマスキングを始めると、「とりあえず全部消す」で分析に使えなくなるか、「とりあえず全部残す」で安全になりません。<br>列を残すか消すかは、目的から逆算します。</p>
+    <div class="callout"><span class="ct">今日の共通お題では、この目的で進めてください</span>
+      <strong>「毎月のお客様の声から、商品や対応の課題を見つけて、報告する」</strong><br>
+      → だから商品名・数量・自由記述（お客様の声）は残す／氏名・連絡先は目的に関係ないから消す。<br>この順番で考えます。
+    </div>
+    <p>自分の業務に転用するときは、この目的決めを<strong>AIとの壁打ちで</strong>やるのがおすすめです。<br>データの中身を貼る必要はありません——列名と業務の説明だけで相談できます。</p>
+    <div class="copywrap">
+      <div class="copyhead"><span class="fn">壁打ちの頼み方の例（自分の業務に転用するとき）</span><button class="copybtn" type="button">コピー</button></div>
+      <pre class="copy">毎月の◯◯業務のデータ分析を仕組み化したいです。まず「このデータで何を知りたいか」の整理を手伝ってください。
+・データの列：（列名だけ書く。中身の行は貼らない）
+・報告する相手：◯◯
+・毎月の判断に使いたいこと：まだ曖昧なので、質問しながら一緒に絞ってください</pre>
+    </div>
+
+    <h4>定例業務を工程に分解する</h4>
+    <p>今日の共通業務（毎月届く注文データ〈顧客アンケートのコメント付き〉を処理する）を、5つの工程に割ります。<br><strong>なぜ割るのか</strong>——工程に割れて初めて、「どの工程を誰（何）にやらせるか」を選べるからです。丸ごとのままでは、任せる・任せないの判断ができません。</p>
+    <div class="proc">
+      <div class="st"><span class="n">01</span><span class="t"><span class="u">データ取得</span></span></div>
+      <span class="ar">→</span>
+      <div class="st"><span class="n">02</span><span class="t"><span class="u">マスキング</span></span><small><span class="u">個人情報を</span><span class="u">消す</span></small></div>
+      <span class="ar">→</span>
+      <div class="st"><span class="n">03</span><span class="t"><span class="u">分類</span></span></div>
+      <span class="ar">→</span>
+      <div class="st"><span class="n">04</span><span class="t"><span class="u">集計</span></span></div>
+      <span class="ar">→</span>
+      <div class="st"><span class="n">05</span><span class="t"><span class="u">可視化</span></span></div>
+    </div>
+
+    <h4 id="work1"><span class="wk">作業①</span>適材適所マップ：まず自分で埋めてみる</h4>
+    <p class="tooltag">🖥 操作するもの：<b>下の表でタップして選ぶ</b></p>
+    <p>各工程を「GAS/VBA（ルール通りに動くツール）」「AIエージェント」「人」のどれに割り当てるか、まずは自力で選んでください。<br>座学で聞いた判断基準（機密性・形式の明確さ）をそのまま当てはめるだけです。</p>
+    <div class="tblwrap maptable" id="mapTable"><table>
+      <tr><th>工程</th><th>担当（タップして選ぶ）</th></tr>
+      <tr>
+        <td>①データ取得</td>
+        <td class="pick" data-ans="人" data-reason="単純作業・自動化は発展枠">
+          <div class="chipset" role="group" aria-label="①データ取得の担当を選ぶ">
+            <button type="button" class="chip" data-v="GAS/VBA">GAS/VBA</button>
+            <button type="button" class="chip" data-v="AIエージェント">AIエージェント</button>
+            <button type="button" class="chip" data-v="人">人</button>
+          </div>
+          <small class="verdict"></small>
+        </td>
+      </tr>
+      <tr>
+        <td>②マスキング</td>
+        <td class="pick" data-ans="GAS/VBA" data-reason="機械的・形式が明確。生データを外に出さない">
+          <div class="chipset" role="group" aria-label="②マスキングの担当を選ぶ">
+            <button type="button" class="chip" data-v="GAS/VBA">GAS/VBA</button>
+            <button type="button" class="chip" data-v="AIエージェント">AIエージェント</button>
+            <button type="button" class="chip" data-v="人">人</button>
+          </div>
+          <small class="verdict"></small>
+        </td>
+      </tr>
+      <tr>
+        <td>③分類</td>
+        <td class="pick" data-ans="AIエージェント" data-reason="判断が要る">
+          <div class="chipset" role="group" aria-label="③分類の担当を選ぶ">
+            <button type="button" class="chip" data-v="GAS/VBA">GAS/VBA</button>
+            <button type="button" class="chip" data-v="AIエージェント">AIエージェント</button>
+            <button type="button" class="chip" data-v="人">人</button>
+          </div>
+          <small class="verdict"></small>
+        </td>
+      </tr>
+      <tr>
+        <td>④集計</td>
+        <td class="pick" data-ans="AIエージェント" data-reason="判断が要る">
+          <div class="chipset" role="group" aria-label="④集計の担当を選ぶ">
+            <button type="button" class="chip" data-v="GAS/VBA">GAS/VBA</button>
+            <button type="button" class="chip" data-v="AIエージェント">AIエージェント</button>
+            <button type="button" class="chip" data-v="人">人</button>
+          </div>
+          <small class="verdict"></small>
+        </td>
+      </tr>
+      <tr>
+        <td>⑤ダッシュボード化</td>
+        <td class="pick" data-ans="AIエージェント" data-reason="可視化の形を相談しながら決める">
+          <div class="chipset" role="group" aria-label="⑤ダッシュボード化の担当を選ぶ">
+            <button type="button" class="chip" data-v="GAS/VBA">GAS/VBA</button>
+            <button type="button" class="chip" data-v="AIエージェント">AIエージェント</button>
+            <button type="button" class="chip" data-v="人">人</button>
+          </div>
+          <small class="verdict"></small>
+        </td>
+      </tr>
+    </table></div>
+    <div class="mapctrls">
+      <button type="button" class="checkbtn" id="mapCheckBtn">答え合わせを見る</button>
+      <button type="button" class="checkbtn ghost" id="mapResetBtn" hidden>やり直す</button>
+    </div>
+    <p class="mapmsg" id="mapMsg" hidden></p>
+    <p class="note">余裕がある人は、自分の業務ならどの工程が同じ割り当てになるか、横に1行メモしておいてください。<br>持ち帰りの種になります。</p>
+  </section>
+
+  <section class="chap" id="s6">
+    <div class="chap-head"><span class="no">W2</span><h3>マスキングGASを、AIに作らせる</h3></div>
+    <div class="callout ok"><span class="ct">✅ このワークのゴール</span>
+      <code>masked</code>シートに、<strong>個人情報が消えた4月分のデータが出ている</strong>状態。
+    </div>
+
+    <h4 id="work2"><span class="wk">作業②</span>まず、データを受け取る</h4>
+    <p class="tooltag">🖥 操作するもの：<b>ブラウザ（Googleドライブ → スプレッドシート）</b></p>
+    <ol class="steps">
+      <li>配布フォルダ「<strong>01</strong>」のスプレッドシート「注文データ_2026-04」を開く（リンクは当日チャットにも流します）</li>
+      <li>「ファイル」→「<strong>コピーを作成</strong>」で、自分のドライブに複製する（元のファイルは閲覧専用です。作業は自分のコピーで行います）</li>
+      <li>自分のドライブに保存されたことと、シート名が「注文データ_2026-04」になっていることを確認する</li>
+      <li>PC側の「今日の作業フォルダ」も、ここで場所を再確認しておく（事前準備で作ったフォルダ。今日の成果物は全部ここに入れます）</li>
+    </ol>
+    <figure class="shot">
+      <img src="images/impl-0.webp" alt="元データを「コピーを作成」で複製" loading="lazy">
+      <figcaption>「コピーを作成」で複製する</figcaption>
+    </figure>
+    <figure class="shot">
+      <img src="images/impl-1.webp" alt="コピーした注文データ_2026-04の生データ" loading="lazy">
+      <figcaption>複製した生データ（マスキング前）</figcaption>
+    </figure>
+    <p class="note">中身は4月分のダミーデータ（注文＋顧客コメント）です。実在の個人情報は一切含まれていません。</p>
+    <div class="callout ng"><span class="ct">⛔ ここが今日いちばん大事なルール</span>
+      <strong>いま受け取ったデータ（マスキング前の生データ）は、絶対にAIに渡さない。</strong><br>
+      コピペで貼るのも、ファイルごと読み込ませるのもNGです。<br>
+      AIに渡してよいのは、このあとGASでマスキングした後の<strong>maskedシートのデータだけ</strong>。
+    </div>
+
+    <h4>そもそもGASとは？</h4>
+    <p><strong>GAS（Google Apps Script）</strong>＝Googleスプレッドシートに<strong>標準搭載されている自動化機能</strong>です。<br>追加インストール不要・無料で、スプレッドシートのメニューから実行できます。ExcelでいうVBAにあたります。</p>
+    <div class="callout ok"><span class="ct">コードは書けなくてOK</span>
+      GASのコードを書くのはAIの仕事です。あなたがやるのは<strong>「何をしてほしいか」を伝えて、返ってきたコードを貼って実行するだけ</strong>。<br>今日はその頼み方の「型」から練習します。
+    </div>
+
+    <h4>依頼の5要素（今日いちばん大事な型）</h4>
+    <p>「マスキングして」とだけ頼むと、列の扱いがズレます。<br>決めるのはこの5つだけです。</p>
+    <div class="tblwrap"><table>
+      <tr><th>要素</th><th>内容</th></tr>
+      <tr><td><b>A. ゴール</b></td><td>個人情報を消して"最悪漏れても問題ない状態"にするGASを書いて／非エンジニアがコピペで動く完成形・日本語コメント付き</td></tr>
+      <tr><td><b>B. 入力</b></td><td>どのシートに、どんな列があるか（列名を全部書き出す）</td></tr>
+      <tr><td><b>C. 列ごとの扱い</b></td><td>そのまま使う／削除する／仮名化する（メール→ID化）／一部だけ残す（住所→都道府県）／自由記述は形式明確なものだけ機械置換</td></tr>
+      <tr><td><b>D. 出力</b></td><td>どのシートに・どんな列で</td></tr>
+      <tr><td><b>E. 使い方</b></td><td>メニューから実行できるように、等</td></tr>
+    </table></div>
+
+    <div class="callout"><span class="ct">禁止則（必ず守る）</span>
+      AIに渡すのは<strong>構造（列名）だけ</strong>。<br>中身の行は1行も貼らないでください。<br>「例を見せた方が伝わる」と思ってサンプル行を貼った瞬間、生データ送信になってしまいます。<br>例が要るときはダミー値を自作してください。
+    </div>
+
+    <h4 id="work3"><span class="wk">作業③</span>Claude Code / Codexに頼む</h4>
+    <p class="tooltag">🖥 操作するもの：<b>Claude Code / Codex</b></p>
+    <div class="copywrap">
+      <div class="copyhead"><span class="fn">頼み方の例（B・Cは共通お題のシートに合わせて書き換え）</span><button class="copybtn" type="button">コピー</button></div>
+      <pre class="copy">個人情報を消して"最悪漏れても問題ない状態"にするGASを書いてください。
+非エンジニアがコピペで動く完成形で、日本語コメント付きでお願いします。
+
+【入力】
+・シート名：注文データ_2026-04（今後 注文データ_2026-05 のように月別で増える想定）
+・列：注文日 / 氏名 / メールアドレス / 電話番号 / 住所 / 商品名 / 数量 / 自由記述
+
+【列ごとの扱い】
+・注文日・商品名・数量・自由記述 → そのまま使う
+・氏名 → 削除する
+・メールアドレス → 仮名化する（名寄せキーとして使うのでハッシュID化）
+・電話番号 → 削除する
+・住所 → 都道府県だけ残す
+
+【出力】
+・masked という1つのシートに、「注文データ_」で始まる全シートをまとめて出力（毎回クリアして再生成）
+
+【使い方】
+・スプレッドシートのメニューから実行できるようにしてください</pre>
+    </div>
+    <figure class="shot">
+      <img src="images/impl-3.webp" alt="AIにGAS作成を依頼している様子" loading="lazy">
+      <figcaption>AIにGAS作成を依頼</figcaption>
+    </figure>
+    <figure class="shot">
+      <img src="images/impl-4.webp" alt="完成したGASコード ec_order_masking.gs" loading="lazy">
+      <figcaption>できあがったGASコード</figcaption>
+    </figure>
+
+    <h4 id="work4"><span class="wk">作業④</span>実行する</h4>
+    <p class="tooltag">🖥 操作するもの：<b>スプレッドシート（拡張機能 → Apps Script）</b></p>
+    <ol class="steps">
+      <li>スプレッドシートの「拡張機能」→「Apps Script」を開く</li>
+      <li>エディタの中身をすべて消して、AIが書いたGASを全文貼り付ける</li>
+      <li>保存（💾アイコン または Ctrl+S / ⌘+S）→ スプレッドシートのタブに戻って、ページを再読み込みする</li>
+      <li>メニューに「マスキング」が増えているので、そこから実行する（初回は認可画面が出ます。当日は全員でいったん手を止めて案内します。詳しくはFAQ Q5）</li>
+      <li><code>masked</code>シートに、個人情報が消えたデータが出ているか確認する</li>
+    </ol>
+
+    <figure class="shot">
+      <img src="images/impl-2.webp" alt="拡張機能→Apps Scriptを開く" loading="lazy">
+      <figcaption>① 拡張機能→Apps Scriptを開く</figcaption>
+    </figure>
+    <figure class="shot">
+      <img src="images/impl-5.webp" alt="Apps Scriptの空プロジェクト" loading="lazy">
+      <figcaption>② 空のプロジェクトが開く</figcaption>
+    </figure>
+    <figure class="shot">
+      <img src="images/impl-6.webp" alt="GASコードを貼り付けた状態（未保存）" loading="lazy">
+      <figcaption>③ コードを全文貼り付け</figcaption>
+    </figure>
+    <figure class="shot">
+      <img src="images/impl-7.webp" alt="保存ボタン（💾アイコン）" loading="lazy">
+      <figcaption>④ 保存ボタンを押す</figcaption>
+    </figure>
+    <figure class="shot">
+      <img src="images/impl-8.webp" alt="メニューに「個人情報マスキング」が追加された状態" loading="lazy">
+      <figcaption>⑤ メニューに追加された「個人情報マスキング」</figcaption>
+    </figure>
+    <figure class="shot">
+      <img src="images/impl-9.webp" alt="初回実行時の認証が必要ですダイアログ" loading="lazy">
+      <figcaption>⑥ 初回は「認証が必要です」が出る</figcaption>
+    </figure>
+    <figure class="shot">
+      <img src="images/impl-10.webp" alt="Googleアカウントへのアクセス許可画面" loading="lazy">
+      <figcaption>⑦ アクセスを許可する</figcaption>
+    </figure>
+    <figure class="shot">
+      <img src="images/impl-11.webp" alt="AI分析用データシートに出力完了（18件）のダイアログ" loading="lazy">
+      <figcaption>⑧ 出力完了（18件）</figcaption>
+    </figure>
+    <figure class="shot">
+      <img src="images/impl-12.webp" alt="注文データとAI分析用データの2シートが並んだ状態" loading="lazy">
+      <figcaption>⑨ 「AI分析用データ」シートが増えている</figcaption>
+    </figure>
+
+    <p class="note">エラーが出たら：エラー文をそのままコピーして、AIに貼って「直して」と頼んでください。それで直るのが普通です。<br>動かない＝失敗ではありません。直すやりとりまで含めて、今日の練習です。</p>
+
+    <div class="callout tool"><span class="ct">Codexで進める方へ</span>
+      依頼の5要素はそのまま使えます。<br>Codexに同じ内容を渡し、Apps Scriptへの貼り付け・実行は同じ手順です。
+    </div>
+  </section>
+
+  <section class="chap" id="s7">
+    <div class="chap-head"><span class="no">W3</span><h3>分析スキルを、その場で作る</h3></div>
+    <div class="callout ok"><span class="ct">✅ このワークのゴール</span>
+      分類カテゴリと報告形式が自分の納得で決まり、<strong>「このスキルでもう一度」と頼める自分のスキルが1つできている</strong>状態。
+    </div>
+
+    <h4>雛形は配りません</h4>
+    <p>今日の分析スキルは、完成品を配って書き換えてもらう形ではありません。<br><strong>マスク済みCSVをまずAIに直接分析させ、分類・集計・報告形式が納得いく形になるまで対話で固めてから、その手順をスキルにします。</strong></p>
+    <p class="note">「今の手順をスキルにして」と頼むだけで通ります——スキルとは「判断基準を固定して繰り返し使えるようにする仕組み」だと、雛形の書き換えではなく自分の判断の固定として体験してもらうためです。</p>
+
+    <div class="proc">
+      <div class="st"><span class="n">STEP 1</span><span class="t"><span class="u">試行錯誤する</span></span><small><span class="u">雛形なし、</span><span class="u">対話でその場分析</span></small></div>
+      <span class="ar">→</span>
+      <div class="st"><span class="n">STEP 2</span><span class="t"><span class="u">分類・報告の</span><span class="u">形が固まる</span></span><small><span class="u">納得いくまで</span><span class="u">調整</span></small></div>
+      <span class="ar">→</span>
+      <div class="st"><span class="n">STEP 3</span><span class="t"><span class="u">スキルとして</span><span class="u">固定</span></span><small><span class="u">「今の手順を</span><span class="u">スキルにして」</span></small></div>
+    </div>
+
+    <h4 id="work5"><span class="wk">作業⑤</span>アドホック分析（雛形なしで、その場で試行錯誤する分析）→ スキル化</h4>
+    <p class="tooltag">🖥 操作するもの：<b>スプレッドシート（CSVダウンロード）→ Claude Code / Codex</b></p>
+    <ol class="steps">
+      <li>maskedシートを開く→「ファイル」→「ダウンロード」→「CSV」→今日の作業フォルダへ移動する（<code>masked_2026-04.csv</code>など月がわかる名前にリネームしておく。作業⑦の複利デモでこのファイルをもう一度使います）</li>
+      <li>Claude Code / Codexに、そのCSVを直接渡して分析を依頼する（分類カテゴリ・集計内容・報告形式を対話で調整する）</li>
+      <li>納得いく形になったら「<strong>今の手順をスキルにして</strong>」と依頼する</li>
+    </ol>
+    <figure class="shot">
+      <img src="images/impl-13.webp" alt="maskedシートをCSVでダウンロード" loading="lazy">
+      <figcaption>maskedシートをCSVでダウンロード</figcaption>
+    </figure>
+
+    <div class="callout ng"><span class="ct">依頼する前に決めておくこと</span>
+      <strong>何を目的にデータを分析させるのか、先に一文で決めておきましょう。</strong><br>
+      目的が曖昧なまま投げると、分類の切り口も報告の形もブレて、後の「スキル化」で毎回作り直しになります。
+    </div>
+
+    <div class="copywrap">
+      <div class="copyhead"><span class="fn">最初の分析依頼の例（自分の言葉に変えてOK）</span><button class="copybtn" type="button">コピー</button></div>
+      <pre class="copy">このCSVは、個人情報をマスキングした注文データ（顧客アンケートのコメント付き）です。
+お客様のコメントを内容ごとに分類して、月ごとに件数を集計してください。</pre>
+    </div>
+    <figure class="shot">
+      <img src="images/impl-14.webp" alt="CSVを渡して分析を依頼している画面" loading="lazy">
+      <figcaption>CSVを渡して分析を依頼</figcaption>
+    </figure>
+    <p>返ってきた結果を見て、気になるところを対話で直します。<br>「この5件はどっちのカテゴリ？」「なぜこの分類にした？」——<strong>聞き方を変えると、返ってくるものが変わります</strong>。<br>ここは答えをもらう時間ではなく、自分の判断基準を言葉にする時間です。</p>
+
+    <h4>スキル化の前に、決めておくこと</h4>
+    <ul class="plain">
+      <li><strong>分類カテゴリ</strong>：「今日はこのカテゴリで固定」と言い切れる状態まで決める。どのカテゴリにも収まらない新傾向は「別枠」で報告させる</li>
+      <li><strong>報告形式</strong>：毎月同じ見た目・同じ並びで出す形を決める（ものさしを固定するから、先月と今月を比べられる）</li>
+      <li><strong>要確認リスト</strong>：「自由記述に人名が含まれる行を一覧にして」と頼み、機械で消しきれなかった個人情報を人の目でチェックする。これが適材適所の「人」の仕事です</li>
+    </ul>
+    <figure class="shot">
+      <img src="images/impl-15.webp" alt="skill-creatorが分類カテゴリを固定するか確認してくる画面" loading="lazy">
+      <figcaption>skill-creatorが分類基準を確認してくる</figcaption>
+    </figure>
+
+    <div class="copywrap">
+      <div class="copyhead"><span class="fn">スキル化の依頼（そのまま送ってOK）</span><button class="copybtn" type="button">コピー</button></div>
+      <pre class="copy">今の分析の手順（分類のやり方・集計の仕方・報告の形式）を、繰り返し使えるスキルにしてください。
+次に新しい月のデータが来たときも、同じ基準で処理できるようにしたいです。</pre>
+    </div>
+
+    <div class="callout ok"><span class="ct">大事な理由</span>
+      分類カテゴリをAI任せにすると、月ごとにラベルが揺れて月次比較が崩れます。<br>「納得したカテゴリをスキルに固定する」ことが、複利（=毎月同じ基準で比較できる）の土台になります。
+    </div>
+
+    <div class="callout tool"><span class="ct">Codexで進める方へ</span>
+      「アドホック分析→納得いったらスキル化」という順番・依頼の言葉づかいはそのまま使えます。<br>うまく通らない場合は、講師の完成スキルの画面共有デモにフォールバックしてください。
+    </div>
+  </section>
+
+  <section class="chap" id="s8">
+    <div class="chap-head"><span class="no">W4</span><h3>ダッシュボード化と、複利の確認</h3></div>
+    <div class="callout ok"><span class="ct">✅ このワークのゴール</span>
+      <strong>3ヶ月分のダッシュボードが出て、6月の変化が読み取れている</strong>状態（コードやスキルの書き換えはゼロ）。
+    </div>
+
+    <div class="callout"><span class="ct">なぜ、分析とダッシュボード化を別のスキルにしておくのか</span>
+      分類・集計は「毎月同じ基準で比べたい」ので、判断基準を固定してスキルにします。<br>
+      ダッシュボード化も、慣れてくれば同じようにスキル化して構いません。<br>
+      ただし<strong>1つのスキルにまとめてしまうと</strong>、「今月はこのグラフを目立たせたい」といった見せ方だけ変えたいときにも分析ロジックごと触ることになり、変更の影響範囲が混ざります。<br>
+      <strong>「分類基準を固定するスキル」と「見せ方を差し替えられるスキル」を分けておくのが、適材適所です。</strong>
+    </div>
+
+    <h4 id="work6"><span class="wk">作業⑥</span>ダッシュボードを作る</h4>
+    <p class="tooltag">🖥 操作するもの：<b>Claude Code / Codex</b>（できたHTMLはブラウザで開く）</p>
+    <p>分析結果を見やすく可視化します。<strong>なぜ作るのか</strong>——数字の表が"絵"になると、毎月の変化がひと目で分かるからです。<br>数字を眺める時間が、打ち手を考える時間に変わります。</p>
+    <div class="copywrap">
+      <div class="copyhead"><span class="fn">依頼はこの1行でOK</span><button class="copybtn" type="button">コピー</button></div>
+      <pre class="copy">集計結果をダッシュボード（HTML）にしてください。</pre>
+    </div>
+    <figure class="shot">
+      <img src="images/impl-16.webp" alt="ダッシュボード化を依頼しArtifactとして公開する画面" loading="lazy">
+      <figcaption>依頼→Artifactとして公開</figcaption>
+    </figure>
+    <p class="note">2〜3分でHTMLファイルが作業フォルダにできます。ダブルクリックするとブラウザで開けます。<br>グラフの種類や並びに希望があれば、続けて対話で直せます。</p>
+    <figure class="shot">
+      <img src="images/impl-17.webp" alt="できあがった4月単月分のダッシュボード" loading="lazy">
+      <figcaption>できあがるダッシュボードの実例（4月単月分）</figcaption>
+    </figure>
+    <p><a class="jumplink" href="#s12">デプロイして共有したい場合はこちらをチェック</a></p>
+
+    <h4 id="work7"><span class="wk">作業⑦</span>複利の二段演出：翌月が来たら</h4>
+    <p class="tooltag">🖥 操作するもの：<b>スプレッドシート（インポート・GAS実行）→ Claude Code / Codex</b></p>
+    <p>「翌月分のデータが来た」想定で、追加のCSVを2ファイルとも自分でスプレッドシートにインポートします。</p>
+
+    <div class="duo">
+      <div class="side">
+        <span class="lb">BEFORE ── 1ヶ月分だけ</span>
+        <span class="big"><span class="u">4月分だけで</span><span class="u">完走</span></span>
+        <p><span class="u">一気通貫は</span><span class="u">できたが、</span><br><span class="u">変化は</span><span class="u">まだ見えない。</span></p>
+      </div>
+      <span class="mid">→</span>
+      <div class="side hero">
+        <span class="lb">AFTER ── 3ヶ月分そろう</span>
+        <span class="big"><span class="u">「配送・梱包の</span><span class="u">不満」が</span><span class="u">急増</span></span>
+        <p><span class="u">インポート・ボタン・</span><span class="u">ダウンロードだけで、</span><br><span class="u">変化が</span><span class="u">見えた。</span></p>
+      </div>
+    </div>
+
+    <ol class="steps">
+      <li>配布フォルダ「<strong>02</strong>」から、CSVファイル2本（注文データ_2026-05.csv・注文データ_2026-06.csv）をダウンロードして、今日の作業フォルダへ移動する</li>
+      <li>まず5月分から：スプレッドシートの「ファイル」→「インポート」→「アップロード」で注文データ_2026-05.csvを選び、「<strong>現在のシートを置換</strong>」で読み込む</li>
+      <li>マスキングGASを実行する（メニューから1回）→ <code>masked</code>シートを「ファイル」→「ダウンロード」→「CSV」で書き出し、<code>masked_2026-05.csv</code>として作業フォルダに保存する</li>
+      <li>同じ手順で6月分も：注文データ_2026-06.csvを「現在のシートを置換」で読み込む→マスキングGASを実行→<code>masked_2026-06.csv</code>として保存する</li>
+      <li>同じ分析スキルに、作業⑤でダウンロード済みの<code>masked_2026-04.csv</code>と合わせて<strong>3ヶ月分のmasked CSV</strong>をまとめて渡し、再処理する</li>
+      <li>ダッシュボードを更新する</li>
+    </ol>
+    <figure class="shot">
+      <img src="images/impl-18.webp" alt="5月・6月分のCSVをGoogleドライブからダウンロード" loading="lazy">
+      <figcaption>5月・6月分のCSVをダウンロード</figcaption>
+    </figure>
+    <figure class="shot">
+      <img src="images/impl-19.webp" alt="スプレッドシートで「ファイル」→「インポート」を開く" loading="lazy">
+      <figcaption>「インポート」を開く</figcaption>
+    </figure>
+    <figure class="shot">
+      <img src="images/impl-20.webp" alt="ファイルをインポートダイアログでインポート場所を選ぶ" loading="lazy">
+      <figcaption>インポート場所を選ぶ</figcaption>
+    </figure>
+    <figure class="shot">
+      <img src="images/impl-21.webp" alt="インポート場所の一覧で「現在のシートを置換」が選ばれている画面" loading="lazy">
+      <figcaption>ここで必ず「現在のシートを置換」を選ぶ</figcaption>
+    </figure>
+    <figure class="shot">
+      <img src="images/impl-22.webp" alt="5月・6月分のデータを同じ分析スキルで再処理するよう依頼している画面" loading="lazy">
+      <figcaption>同じ分析スキルに再処理を依頼</figcaption>
+    </figure>
+    <div class="callout ok"><span class="ct">ここで起きること</span>
+      6月分を渡した瞬間、「配送・梱包の不満が急増」といった変化がダッシュボードに現れます。<br><strong>複利（毎月やるのはインポート・ボタン・ダウンロードだけ）</strong>と、<strong>PDCAのCheck（改善点を早く見つける）</strong>が同時に立ち上がる瞬間です。
+    </div>
+    <figure class="shot">
+      <img src="images/impl-23.webp" alt="3ヶ月分のダッシュボード。梱包・配送への評価が急増している" loading="lazy">
+      <figcaption>実際の3ヶ月累計ダッシュボード（梱包・配送への評価が1件→12件に急増）</figcaption>
+    </figure>
+    <p class="note">シートは毎月「置換」なので増えません。<br>3ヶ月分の履歴は、ダウンロードした<code>masked_*.csv</code>が作業フォルダに積み上がっていく形で残ります。</p>
+    <p class="note">Tips：業務のデータはたいていCSVで出てきます。<br>スプレッドシートに読み込めれば、今日の型にそのまま乗ります。</p>
+
+    <h4 id="work8"><span class="wk">作業⑧</span>価値換算</h4>
+    <p class="tooltag">🖥 操作するもの：<b>下の計算フォームに直接入力</b></p>
+    <p>最後に、削減できた時間を金額に直します。<strong>なぜ金額にするのか</strong>——「やった感」ではなく金額で語れると、社内での評価にも、社外への提案にも使える言葉になるからです。</p>
+    <p><strong>式：頻度（日次/週次/月次）× 1回あたりの削減時間 × 時給換算</strong></p>
+
+    <div class="calc" id="valueCalc">
+      <div class="calc-row">
+        <label>作業内容
+          <input type="text" id="vcTask" value="アンケート集計" placeholder="例：アンケート集計">
+        </label>
+      </div>
+      <div class="calc-row">
+        <label>作業前（時間）
+          <input type="number" id="vcBefore" value="3" min="0" step="0.1">
+        </label>
+        <label>作業後（時間）
+          <input type="number" id="vcAfter" value="0.5" min="0" step="0.1">
+        </label>
+        <label>頻度
+          <select id="vcFreq">
+            <option value="250">日次（年250日で計算）</option>
+            <option value="52">週次（年52週で計算）</option>
+            <option value="12" selected>月次（年12ヶ月で計算）</option>
+          </select>
+        </label>
+        <label>時給換算（円）
+          <input type="number" id="vcWage" value="2000" min="0" step="100">
+        </label>
+      </div>
+      <div class="calc-result">
+        <span class="r-line"><b id="vcTaskOut">アンケート集計</b>：1回あたり<b id="vcDelta">2.5</b>時間の削減</span>
+        <span class="r-line">年間<b id="vcHours">30</b>時間の削減 ＝ <b class="big" id="vcYen">60,000円</b>/年</span>
+      </div>
+    </div>
+    <p class="note">数値は最初、サンプル（月1回のアンケート集計・3時間→30分・時給2,000円）が入っています。<br>事前課題で持ってきた自分の業務の数字に書き換えて、そのまま計算してください。</p>
+  </section>
+</div>
+
+<!-- ==================== TAB 4: 講義のあと ==================== -->
+<div class="panel" id="t3">
+  <div class="panel-head">
+    <span class="kicker">After the Workshop</span>
+    <h2>講義のあとにやること</h2>
+    <p class="desc">今日作った型を、自分の業務に横展開するためのコンテンツです。<br>持ち帰って、後から見返してください。</p>
+    <div class="local">
+      <a href="#s9"><b>A1</b>転用例集</a>
+      <a href="#s10"><b>A2</b>スキル化に詰まったら</a>
+      <a href="#s11"><b>A3</b>claspで一歩先へ</a>
+      <a href="#s12"><b>A4</b>ダッシュボードを公開する</a>
+    </div>
+  </div>
+
+  <div class="callout"><span class="ct">WHY ── なぜ、ここまでやるのか</span>
+    今日作ったのはアンケート処理の仕組み1つですが、型（分解と変換・適材適所）は業務が変わっても同じです。<br>「これ、自分の業務でも使えますよね」——ここから先は、その転用を後押しするコンテンツです。
+  </div>
+
+  <section class="chap" id="s9">
+    <div class="chap-head"><span class="no">A1</span><h3>転用例集：自分の業務に置き換える</h3></div>
+    <p>今日の共通お題（注文データ＋顧客コメント）以外にも、個人情報が絡む定型業務は数多くあります。<br>使っているシステムに「CSVエクスポート」ボタンがあれば、今日の型に乗ります。<br>代表的な4業務の「列の扱い」を先に示します。</p>
+
+    <div class="cards4 subnav" role="tablist" aria-label="転用例">
+      <div class="cc on" data-sub2="y1" role="tab"><span class="nm"><span class="u">問い合わせ</span><span class="u">ログ</span></span></div>
+      <div class="cc" data-sub2="y2" role="tab"><span class="nm"><span class="u">採用応募者</span><span class="u">データ</span></span></div>
+      <div class="cc" data-sub2="y3" role="tab"><span class="nm"><span class="u">勤怠・工数</span><span class="u">データ</span></span></div>
+      <div class="cc" data-sub2="y4" role="tab"><span class="nm"><span class="u">イベント</span><span class="u">申込者リスト</span></span></div>
+    </div>
+
+    <div class="subpane2 on" data-sub2="y1">
+      <div class="tblwrap"><table>
+        <tr><th>列</th><th>扱い</th></tr>
+        <tr><td>氏名</td><td>削除する</td></tr>
+        <tr><td>メールアドレス</td><td>仮名化する（ID化）</td></tr>
+        <tr><td>会社名</td><td>そのまま、または業種だけ残す</td></tr>
+        <tr><td>問い合わせ本文</td><td>形式が明確なもの（電話番号・メール等）だけ機械置換。それ以外は残して人が最終確認</td></tr>
+      </table></div>
+      <div class="copywrap">
+        <div class="copyhead"><span class="fn">依頼プロンプト例</span><button class="copybtn" type="button">コピー</button></div>
+        <pre class="copy">問い合わせフォームのログから、よくある問い合わせ内容を分類して集計するスキルを作ってください。
+
+【入力】列：受付日時 / 氏名 / メールアドレス / 会社名 / 問い合わせ本文
+【列ごとの扱い】氏名→削除／メールアドレス→仮名化（ID化）／会社名→そのまま／問い合わせ本文→残す（分析対象）
+【出力】分類ごとの件数集計＋代表的な内容の要約</pre>
+      </div>
+    </div>
+
+    <div class="subpane2" data-sub2="y2">
+      <div class="tblwrap"><table>
+        <tr><th>列</th><th>扱い</th></tr>
+        <tr><td>氏名</td><td>削除する</td></tr>
+        <tr><td>連絡先</td><td>仮名化する（ID化）</td></tr>
+        <tr><td>経歴・志望動機</td><td>残す（分析対象）</td></tr>
+        <tr><td>生年月日</td><td>年代のみ残す</td></tr>
+      </table></div>
+      <div class="copywrap">
+        <div class="copyhead"><span class="fn">依頼プロンプト例</span><button class="copybtn" type="button">コピー</button></div>
+        <pre class="copy">採用応募者データから、志望動機の傾向を分類して集計するスキルを作ってください。
+
+【入力】列：応募日 / 氏名 / 連絡先 / 生年月日 / 経歴 / 志望動機
+【列ごとの扱い】氏名→削除／連絡先→仮名化（ID化）／生年月日→年代のみ／経歴・志望動機→残す（分析対象）
+【出力】志望動機の傾向分類＋件数集計</pre>
+      </div>
+    </div>
+
+    <div class="subpane2" data-sub2="y3">
+      <div class="tblwrap"><table>
+        <tr><th>列</th><th>扱い</th></tr>
+        <tr><td>氏名</td><td>削除、または社員番号のみ残す</td></tr>
+        <tr><td>所属部署</td><td>そのまま</td></tr>
+        <tr><td>稼働時間・残業時間</td><td>残す（分析対象）</td></tr>
+        <tr><td>業務コメント</td><td>形式が明確なものだけ機械置換、それ以外は人が確認</td></tr>
+      </table></div>
+      <p class="note">狙い：部署別の負荷傾向を早く見つける。<br>個人を特定せず、傾向だけを可視化する設計にする。</p>
+    </div>
+
+    <div class="subpane2" data-sub2="y4">
+      <div class="tblwrap"><table>
+        <tr><th>列</th><th>扱い</th></tr>
+        <tr><td>氏名</td><td>削除する</td></tr>
+        <tr><td>メールアドレス</td><td>仮名化する（ID化・重複参加者の識別に使う）</td></tr>
+        <tr><td>所属・職種</td><td>そのまま（属性分析に使う）</td></tr>
+        <tr><td>アンケート回答（自由記述）</td><td>残す（分析対象）</td></tr>
+      </table></div>
+      <p class="note">狙い：参加者属性の傾向と満足度コメントを、個人を特定せず集計する。</p>
+    </div>
+  </section>
+
+  <section class="chap" id="s10">
+    <div class="chap-head"><span class="no">A2</span><h3>スキル化に詰まったら</h3></div>
+    <p>当日「今の手順をスキルにして」で通らなかった場合や、家で自分の業務に転用するときに詰まったら、ここに戻ってきてください。</p>
+
+    <h4>スキル化プロンプトの型</h4>
+    <div class="copywrap">
+      <div class="copyhead"><span class="fn">素朴な依頼でOK</span><button class="copybtn" type="button">コピー</button></div>
+      <pre class="copy">今の分析の手順（分類のやり方・集計の仕方・報告の形式）を、繰り返し使えるスキルにしてください。
+次に新しい月のデータが来たときも、同じ基準で処理できるようにしたいです。</pre>
+    </div>
+    <p class="note">うまく通らないときは、直前の対話で「分類のカテゴリ」「集計の切り口」「報告のフォーマット」の3つが具体的に決まっているか確認してください。<br>決まっていないままスキル化を頼むと、AIが毎回別の基準で作ってしまいます。</p>
+
+    <h4>良いスキルの構成要素</h4>
+    <ul class="plain">
+      <li><strong>分類カテゴリの固定</strong>：月ごとにラベルが揺れないよう、カテゴリ名を明記して固定する</li>
+      <li><strong>報告形式</strong>：集計の切り口（件数・割合・傾向コメント等）を毎回同じ形式に揃える</li>
+      <li><strong>新傾向の別枠報告</strong>：どのカテゴリにも当てはまらない新しい傾向が出たときは、既存カテゴリに無理に押し込めず別枠で報告するようスキルに指示しておく</li>
+    </ul>
+  </section>
+
+  <section class="chap" id="s11">
+    <div class="chap-head"><span class="no">A3</span><h3>claspで一歩先へ</h3></div>
+    <p>今日のGASは、Googleのエディタ上でAIに書いてもらう形でした。<br><strong>clasp</strong>を使うと、Claude Code / Codex上でGASのコードを直接編集・デプロイできます——「こういう風にGASを使う世界もある」と知っておくための、次のステージの紹介です。</p>
+    <div class="callout"><span class="ct">当日は紹介のみ</span>
+      Node.js導入・clasp login・Apps Script API有効化など、環境ごとの分岐が増えるため、当日ハンズオンでは手を動かしません。<br>実装方法はここに記事と動画で用意します。
+    </div>
+    <figure class="shot">
+      <div class="ph">clasp実装手順の記事＋Loom動画（制作中・公開までにここに掲載します）</div>
+      <figcaption>ベース素材：JGO順位トラッカーでのclasp実機経験</figcaption>
+    </figure>
+  </section>
+
+  <section class="chap" id="s12">
+    <div class="chap-head"><span class="no">A4</span><h3>ダッシュボードを公開する</h3></div>
+    <p>作業⑥で作ったダッシュボードのHTMLファイルは、まだ自分のPCの中にあるだけです。<br>チームに共有するにはURLにして「公開（デプロイ）」する必要があります。<br>方法を5つ、目的別に紹介します。カードをクリックすると、その方法の手順に切り替わります。</p>
+
+    <div class="pubgrid subnav" id="pubNav" role="tablist" aria-label="公開方法">
+      <div class="pc reco on" data-pub="agent" role="tab">
+        <span class="nm">Claude Code / Codex</span><span class="reco-tag">最速</span>
+        <span class="dots">かんたん度 <b>●●●●</b></span>
+        <p><span class="u">いま使っている</span><span class="u">エージェントの中で</span><span class="u">そのまま公開したい人へ。</span><br><span class="u">Pro/Max以上の</span><span class="u">有料プランが必要。</span></p>
+      </div>
+      <div class="pc" data-pub="google" role="tab">
+        <span class="nm">Googleサイト</span><span class="reco-tag">アカウント不要</span>
+        <span class="dots">かんたん度 <b>●●●</b></span>
+        <p><span class="u">いちばん簡単に</span><span class="u">済ませたい人へ。</span><br><span class="u">Googleアカウントが</span><span class="u">あれば</span><span class="u">登録不要。</span></p>
+      </div>
+      <div class="pc" data-pub="cloudflare" role="tab">
+        <span class="nm">Cloudflare Pages</span>
+        <span class="dots">かんたん度 <b>●●</b>○</span>
+        <p><span class="u">Gitもコマンドも</span><span class="u">使わず</span><span class="u">アップロードしたい人へ。</span><br><span class="u">要アカウント登録。</span></p>
+      </div>
+      <div class="pc" data-pub="vercel" role="tab">
+        <span class="nm">Vercel</span>
+        <span class="dots">かんたん度 <b>●●</b>○</span>
+        <p><span class="u">ちゃんとしたURLで</span><span class="u">公開したい人へ。</span><br><span class="u">アカウント登録＋</span><span class="u">エージェントに任せる。</span></p>
+      </div>
+      <div class="pc" data-pub="github" role="tab">
+        <span class="nm">GitHub Pages</span>
+        <span class="dots">かんたん度 <b>●</b>○○</span>
+        <p><span class="u">エンジニアの世界も</span><span class="u">覗いてみたい人へ。</span><br><span class="u">GitHubアカウントが</span><span class="u">必要。</span></p>
+      </div>
+    </div>
+
+    <div class="pubpane on" data-pub="agent">
+      <h4>Claude Code / Codex（いま使っているエージェントでそのまま）</h4>
+      <p>すでに今日使っているツールに、公開まで頼める機能が組み込まれています。<br>新しいアカウント登録が要らない代わりに、<strong>Pro/Max以上の有料プランが必要</strong>です（無料枠では公開できません）。</p>
+
+      <h4>Claude Codeの場合：Artifact機能</h4>
+      <ol class="steps">
+        <li>ダッシュボードのHTMLができたら、Claude Codeに「<strong>これをartifactとして公開して</strong>」と頼む</li>
+        <li>公開の許可を聞かれたら「Yes」で進める → URLが表示され、ブラウザが自動で開く</li>
+        <li>ページ右上の「Share」から共有設定を開く → 個人のPro/Maxプランでは、誰でもサインイン不要で見られる<strong>公開リンク</strong>を作れる</li>
+        <li>できたURLをチームに共有する</li>
+      </ol>
+      <p class="note">条件：Claude Code CLI（v2.1.183以降）またはデスクトップアプリで <code>/login</code> サインイン済みであること（APIキーだけのセッションでは使えません）。</p>
+
+      <h4>Codexの場合：Sites機能</h4>
+      <ol class="steps">
+        <li>ダッシュボードのHTMLができたら、Codexに「<strong>このダッシュボードをSitesとして公開して</strong>」と頼む（または chatgpt.com/sites で内容を渡す）</li>
+        <li>内容を確認し、必要なら修正を依頼する</li>
+        <li>「バージョンを保存」→「デプロイ」の2段階で公開する（保存しただけでは公開されません）</li>
+        <li>共有設定（招待制／ワークスペース全体／公開リンク）を選び、URLを共有する</li>
+      </ol>
+      <div class="callout"><span class="ct">NOTE</span>
+        Sitesはパブリックベータです。利用できるプラン・地域・ワークスペース設定は変わる可能性があります。
+      </div>
+    </div>
+
+    <div class="pubpane" data-pub="google">
+      <h4>Googleサイト（いちばん簡単）</h4>
+      <p>Googleアカウントがあれば、新しい登録は不要です。<br>デザインもほぼそのまま再現されます。</p>
+      <ol class="steps">
+        <li>sites.google.com で「新しいサイト」を作る</li>
+        <li>右側パネルの「ページ」タブを開く → 右下の＋メニューから「<strong>ページ全体の埋め込み</strong>」を選ぶ</li>
+        <li>埋め込みコードの欄に、作業⑥でできたダッシュボードのHTMLファイルの中身を全部コピーして貼る →「挿入」</li>
+        <li>右上の「公開」→ サイトのURLを決めて公開する</li>
+      </ol>
+      <p class="note">「ページ全体の埋め込み」なら、ブロックの枠をドラッグして広げる手間がありません。<br>公開したら、スマホでも一度開いて表示を確認しておきましょう。</p>
+    </div>
+
+    <div class="pubpane" data-pub="cloudflare">
+      <h4>Cloudflare Pages（Gitもコマンドも不要）</h4>
+      <p>アカウント登録だけすれば、あとは<strong>フォルダをドラッグ＆ドロップするだけ</strong>で公開できます。<br><code>○○.pages.dev</code> という形のURLがもらえます。</p>
+      <ol class="steps">
+        <li>Cloudflareのアカウントを作る（dash.cloudflare.com）</li>
+        <li>「Workers &amp; Pages」→「Pages」→「アップロードで直接デプロイ」を選ぶ</li>
+        <li>プロジェクト名を決める</li>
+        <li><strong>HTMLファイル単体ではなく、フォルダごと</strong>アップロードエリアにドラッグ＆ドロップする（ファイル単体だと正しく認識されません）</li>
+        <li>「サイトをデプロイ」→ 数十秒で公開される</li>
+      </ol>
+      <p class="note">公開したら、スマホでも一度開いて表示を確認しておきましょう。</p>
+    </div>
+
+    <div class="pubpane" data-pub="vercel">
+      <h4>Vercel（ちゃんとしたURL）</h4>
+      <p>Web制作の現場でも使われるサービスです。<br><code>○○.vercel.app</code> という形のURLがもらえます。</p>
+      <p>Vercelの公開は「Gitリポジトリ連携」か「コマンド操作（CLI）」が基本で、ブラウザにファイルを置くだけの方法はありません。<br>でも、思い出してください——<em>コマンド操作こそ、エージェントに任せられる仕事です</em>。</p>
+      <ol class="steps">
+        <li>Vercelのアカウントを作る（vercel.com）</li>
+        <li>Claude Code / Codexに頼む：「<strong>このフォルダのダッシュボードのHTMLを、Vercelで公開して。必要な準備も教えて</strong>」</li>
+        <li>途中のログイン確認などは自分で操作し、あとはエージェントに進めてもらう</li>
+      </ol>
+      <p class="note">今日の「分からないことはAIに聞く・作業は任せる」を、そのまま公開作業にも使う練習になります。</p>
+      <div class="callout"><span class="ct">NOTE</span>
+        Vercelの無料プランは「個人プロジェクト向け」とされています。<br>チーム内共有の範囲で使いましょう。
+      </div>
+    </div>
+
+    <div class="pubpane" data-pub="github">
+      <h4>GitHub Pages（エンジニアの世界の入口）</h4>
+      <p>GitHubは、世界中の開発者がコードを置いている場所です。<br>ここにHTMLを置くと <code>あなたの名前.github.io/○○</code> というURLで公開できます。<br>「リポジトリ」（ファイル置き場）を作る、という一手間がありますが、<strong>エージェントを本格的に使っていくと必ず出会う世界</strong>なので、興味がある人はここから覗いてみてください。<br>分からない手順は、例によってClaude Code / Codexに聞けば教えてくれます。</p>
+    </div>
+
+    <p class="note">公開URLはチームのチャットやメールで共有すれば、毎月そこを見るだけで済むようになります。</p>
+  </section>
+</div>
+
+<!-- ==================== TAB 5: FAQ ==================== -->
+<div class="panel" id="t4">
+  <div class="panel-head">
+    <span class="kicker">Troubleshooting</span>
+    <h2>詰まったときは</h2>
+    <p class="desc">当日よくある詰まりを集めました。<br>質問を開くと答えが出ます。</p>
+  </div>
+
+  <details>
+    <summary><span class="q">Q1</span>質問したいとき</summary>
+    <div class="a">質問はチャットへ投稿してください。<br>作業中は区切りごとにまとめて回答します。<br>すぐ拾えない質問も、後で必ず拾います。</div>
+  </details>
+  <details>
+    <summary><span class="q">Q2</span>作業中の説明を聞き逃した</summary>
+    <div class="a">サイレント作業ブロック中は講師トークを止めています。<br>作業が一区切りついたタイミングで、要点をもう一度まとめて共有します。<br>このガイドの該当セクションもあわせて見返してください。</div>
+  </details>
+  <details>
+    <summary><span class="q">Q3</span>手順が人によって分かれた（分岐が発生した）</summary>
+    <div class="a">環境差により一部の人だけ別手順になることがあります。<br>分岐が起きたら、講師が全員の手を止めて「今から2つに分かれます・あなたはどちらか」を案内します。<br>慌てず、案内に従ってください。</div>
+  </details>
+  <details>
+    <summary><span class="q">Q4</span>マスク済みCSVや出力ファイルがどこにあるか分からない</summary>
+    <div class="a">今日の作業フォルダの中を確認してください。<br>ワーク開始前に「あなたのファイルはここに出る」を実画面で確認しています。<br>見当たらない場合は、ダウンロードフォルダも確認してください。</div>
+  </details>
+  <details>
+    <summary><span class="q">Q5</span>GASの認可画面で止まった</summary>
+    <div class="a">初回実行時は必ず認可画面が出ます。<br>「詳細」→「（プロジェクト名）に移動」と進めば許可できます。<br>Googleアカウントでのログインが必要です。</div>
+  </details>
+  <details>
+    <summary><span class="q">Q6</span>生成に失敗した・変なものが出た</summary>
+    <div class="a">もう一度頼めばOKです。<br>30点でOK、エージェントは育てるもの。<br>うまくいかない場合は「列ごとの扱い」を依頼文にもう一度明記して頼み直してください。</div>
+  </details>
+  <details>
+    <summary><span class="q">Q7</span>隣の人と違う動きをする</summary>
+    <div class="a">それが正常です。<br>エージェントは毎回まったく同じには動きません。<br>出てきたものが要件を満たしていればOKです。</div>
+  </details>
+  <details>
+    <summary><span class="q">Q8</span>Codexでも同じ手順でできますか？</summary>
+    <div class="a">できます。<br>依頼の型（5要素・スキル化の言葉づかい）はツール非依存なので、Claude Code / Codexどちらでもそのまま使えます。<br>当日の実演デモはClaude Codeで見せますが、手順はCodexでも同じです。<br>細かい手順差がある箇所は、各セクションの水色のボックスに補足しています。</div>
+  </details>
+
+  <div class="goal" style="margin-top:var(--sp-6)">
+    <span class="ct">YOU MADE IT</span>
+    <p>あなたはもう、仕組みと価値を生む人です。<small>おつかれさまでした。</small></p>
+  </div>
+</div>
+
+<div class="pager" id="pager">
+  <button type="button" class="prev" hidden><small>PREV</small><span></span></button>
+  <button type="button" class="next" hidden><small>NEXT</small><span></span></button>
+</div>
+
+<footer class="site">
+  SHIFT AI「効率化を、仕組みに変える。〜AIエージェントで作る、時短実践合宿〜」（2026.7.18）ハンズオンガイド
+</footer>
+
+</div>
+
+<script>
+const TABS = ['t0','t1','t2','t3','t4'];
+const TAB_NAMES = ['全体像','事前準備','当日のワーク','講義のあと','FAQ'];
+// セクションid → 所属タブ（直リンクを正しいタブで開くための対応表）
+const SECTION_TAB = {s1:'t1',s2:'t1',s3:'t1',s4:'t1',s5:'t2',s6:'t2',s7:'t2',s8:'t2',s9:'t3',s10:'t3',s11:'t3',s12:'t3'};
+
+const tabs = [...document.querySelectorAll('.tab')];
+const panels = TABS.map(id => document.getElementById(id));
+const pagerPrev = document.querySelector('#pager .prev');
+const pagerNext = document.querySelector('#pager .next');
+
+function showTab(id, scrollTop = true){
+  tabs.forEach(t => t.classList.toggle('on', t.dataset.tab === id));
+  panels.forEach(p => p.classList.toggle('on', p.id === id));
+  const i = TABS.indexOf(id);
+  pagerPrev.hidden = i <= 0;
+  pagerNext.hidden = i >= TABS.length - 1;
+  if (i > 0) pagerPrev.querySelector('span').textContent = TAB_NAMES[i-1];
+  if (i < TABS.length - 1) pagerNext.querySelector('span').textContent = TAB_NAMES[i+1];
+  if (scrollTop) window.scrollTo({top:0});
+}
+tabs.forEach(t => t.addEventListener('click', () => { history.replaceState(null,'','#'+t.dataset.tab); showTab(t.dataset.tab); }));
+pagerPrev.addEventListener('click', () => { const i = TABS.indexOf(document.querySelector('.panel.on').id); showTab(TABS[i-1]); });
+pagerNext.addEventListener('click', () => { const i = TABS.indexOf(document.querySelector('.panel.on').id); showTab(TABS[i+1]); });
+
+// ハッシュ（#t2 / #s6 どちらでも）で該当タブを開く
+function route(){
+  const h = location.hash.replace('#','');
+  if (!h) return;
+  if (TABS.includes(h)) { showTab(h); return; }
+  const tab = SECTION_TAB[h];
+  if (tab) {
+    showTab(tab, false);
+    const el = document.getElementById(h);
+    if (el) el.scrollIntoView();
+  }
+}
+window.addEventListener('hashchange', route);
+route();
+
+// パネル内のローカルリンク（同タブ内アンカー）はそのままスクロール
+document.querySelectorAll('.local a').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const id = a.getAttribute('href').slice(1);
+    history.replaceState(null,'','#'+id);
+    route();
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({behavior:'smooth'});
+  });
+});
+
+// copy buttons
+document.querySelectorAll('.copywrap').forEach(w => {
+  const btn = w.querySelector('.copybtn');
+  const pre = w.querySelector('pre.copy');
+  btn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(pre.textContent);
+      btn.textContent = 'コピーしました';
+      btn.classList.add('done');
+      setTimeout(() => { btn.textContent = 'コピー'; btn.classList.remove('done'); }, 1800);
+    } catch (e) {
+      const r = document.createRange();
+      r.selectNodeContents(pre);
+      const sel = getSelection();
+      sel.removeAllRanges(); sel.addRange(r);
+      btn.textContent = '選択しました（Ctrl+Cでコピー）';
+    }
+  });
+});
+
+/* ============ 当日のワーク：作業①〜⑧の追従目次 ============ */
+(function(){
+  const tabbarEl = document.querySelector('.tabbar');
+  const toc = document.querySelector('.worktoc');
+  if(!tabbarEl || !toc) return;
+
+  function setOffsets(){
+    document.documentElement.style.setProperty('--tabbar-h', tabbarEl.offsetHeight + 'px');
+    document.documentElement.style.setProperty('--worktoc-h', toc.offsetHeight + 'px');
+  }
+  setOffsets();
+  window.addEventListener('resize', setOffsets);
+
+  const links = [...toc.querySelectorAll('a')];
+  const targets = links.map(a => document.getElementById(a.dataset.work)).filter(Boolean);
+  const topOffset = tabbarEl.offsetHeight + toc.offsetHeight + 4;
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        links.forEach(a => a.classList.toggle('on', a.dataset.work === entry.target.id));
+      }
+    });
+  }, {rootMargin: `-${topOffset}px 0px -70% 0px`, threshold: 0});
+  targets.forEach(t => io.observe(t));
+})();
+
+/* ============ 転用例集：カード＝サブタブ切り替え ============ */
+(function(){
+  const nav=document.querySelector('.cards4.subnav');
+  if(!nav) return;
+  const cards=[...nav.querySelectorAll('.cc')];
+  const panes=[...document.querySelectorAll('.subpane2')];
+  cards.forEach(c=>{
+    c.addEventListener('click',()=>{
+      const id=c.dataset.sub2;
+      cards.forEach(x=>x.classList.toggle('on',x===c));
+      panes.forEach(p=>p.classList.toggle('on',p.dataset.sub2===id));
+    });
+  });
+})();
+
+/* ============ ダッシュボードの公開方法：カード＝サブタブ切り替え ============ */
+(function(){
+  const nav=document.getElementById('pubNav');
+  if(!nav) return;
+  const cards=[...nav.querySelectorAll('.pc')];
+  const panes=[...document.querySelectorAll('.pubpane')];
+  cards.forEach(c=>{
+    c.addEventListener('click',()=>{
+      const id=c.dataset.pub;
+      cards.forEach(x=>x.classList.toggle('on',x===c));
+      panes.forEach(p=>p.classList.toggle('on',p.dataset.pub===id));
+    });
+  });
+})();
+
+/* ============ 適材適所マップ：チップ選択→その場で答え合わせ ============ */
+(function(){
+  const wrap = document.getElementById('mapTable');
+  const btn = document.getElementById('mapCheckBtn');
+  const resetBtn = document.getElementById('mapResetBtn');
+  if(!wrap || !btn || !resetBtn) return;
+  const cells = [...wrap.querySelectorAll('td.pick')];
+  const msg = document.getElementById('mapMsg');
+
+  function clearVerdicts(){
+    cells.forEach(cell=>{
+      const chips = [...cell.querySelectorAll('.chip')];
+      chips.forEach(x=>x.classList.remove('correct','wrong','answer'));
+      const verdict = cell.querySelector('.verdict');
+      verdict.textContent = '';
+      verdict.className = 'verdict';
+    });
+    wrap.classList.remove('checked');
+    msg.hidden = true;
+    resetBtn.hidden = true;
+  }
+
+  cells.forEach(cell=>{
+    const chips = [...cell.querySelectorAll('.chip')];
+    chips.forEach(chip=>{
+      chip.addEventListener('click',()=>{
+        chips.forEach(x=>x.classList.toggle('sel', x===chip));
+        clearVerdicts();
+      });
+    });
+  });
+
+  btn.addEventListener('click', ()=>{
+    let answered = 0, correct = 0;
+    cells.forEach(cell=>{
+      const ans = cell.dataset.ans;
+      const reason = cell.dataset.reason;
+      const chips = [...cell.querySelectorAll('.chip')];
+      const sel = chips.find(c=>c.classList.contains('sel'));
+      const verdict = cell.querySelector('.verdict');
+      chips.forEach(c=>{
+        c.classList.remove('correct','wrong','answer');
+        if(c.dataset.v === ans) c.classList.add('answer');
+      });
+      if(sel){
+        answered++;
+        const isCorrect = sel.dataset.v === ans;
+        if(isCorrect) correct++;
+        sel.classList.add(isCorrect ? 'correct' : 'wrong');
+        verdict.textContent = isCorrect ? `正解：${reason}` : `→ 正解は「${ans}」：${reason}`;
+        verdict.className = 'verdict ' + (isCorrect ? 'correct' : 'wrong');
+      } else {
+        verdict.textContent = `未選択 → 正解は「${ans}」：${reason}`;
+        verdict.className = 'verdict wrong';
+      }
+    });
+    wrap.classList.add('checked');
+    msg.hidden = false;
+    msg.textContent = `${cells.length}問中 ${correct}問正解（${answered}問回答）`;
+    resetBtn.hidden = false;
+  });
+
+  resetBtn.addEventListener('click', ()=>{
+    cells.forEach(cell=>{
+      cell.querySelectorAll('.chip').forEach(c=>c.classList.remove('sel'));
+    });
+    clearVerdicts();
+  });
+})();
+
+/* ============ 価値換算：ライブ計算 ============ */
+(function(){
+  const task = document.getElementById('vcTask');
+  const before = document.getElementById('vcBefore');
+  const after = document.getElementById('vcAfter');
+  const freq = document.getElementById('vcFreq');
+  const wage = document.getElementById('vcWage');
+  if(!task || !before || !after || !freq || !wage) return;
+  const taskOut = document.getElementById('vcTaskOut');
+  const deltaOut = document.getElementById('vcDelta');
+  const hoursOut = document.getElementById('vcHours');
+  const yenOut = document.getElementById('vcYen');
+
+  function calc(){
+    const b = parseFloat(before.value) || 0;
+    const a = parseFloat(after.value) || 0;
+    const times = parseFloat(freq.value) || 0;
+    const w = parseFloat(wage.value) || 0;
+    const delta = Math.max(0, b - a);
+    const hours = delta * times;
+    const yen = Math.round(hours * w);
+    taskOut.textContent = task.value.trim() || '対象業務';
+    deltaOut.textContent = delta.toLocaleString('ja-JP', {maximumFractionDigits:2});
+    hoursOut.textContent = hours.toLocaleString('ja-JP', {maximumFractionDigits:1});
+    yenOut.textContent = yen.toLocaleString('ja-JP') + '円';
+  }
+  [task, before, after, freq, wage].forEach(el=>{
+    el.addEventListener('input', calc);
+    el.addEventListener('change', calc);
+  });
+  calc();
+})();
+</script>
+</body>
+</html>
