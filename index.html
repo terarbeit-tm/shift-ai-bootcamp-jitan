@@ -1196,12 +1196,62 @@ a.txt{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
     <div class="chap-head"><span class="no">A3</span><h3>claspで一歩先へ</h3></div>
     <p>今日のGASは、Googleのエディタ上でAIに書いてもらう形でした。<br><strong>clasp</strong>を使うと、Claude Code / Codex上でGASのコードを直接編集・デプロイできます——「こういう風にGASを使う世界もある」と知っておくための、次のステージの紹介です。</p>
     <div class="callout"><span class="ct">当日は紹介のみ</span>
-      Node.js導入・clasp login・Apps Script API有効化など、環境ごとの分岐が増えるため、当日ハンズオンでは手を動かしません。<br>実装方法はここに記事と動画で用意します。
+      Node.js導入・clasp login・Apps Script API有効化など、環境ごとの分岐が増えるため、当日ハンズオンでは手を動かしません。<br>ここから先は持ち帰って、自分のペースで試してください。
+    </div>
+
+    <h4>事前準備（1回だけ）</h4>
+    <ol class="steps">
+      <li><a href="https://nodejs.org/" target="_blank" rel="noopener">nodejs.org</a>からNode.jsをインストールする（ターミナルで<code>node -v</code>が通ればOK）</li>
+      <li>ターミナルで<code>npm install -g @google/clasp</code>を実行し、claspをインストールする</li>
+      <li><code>clasp login</code>を実行し、ブラウザでGoogleアカウントにログインする</li>
+    </ol>
+
+    <h4>新しいGASプロジェクトをclaspで作る</h4>
+    <p>Claude Code / Codexの作業フォルダの中で、次のコマンドを実行します。</p>
+    <div class="copywrap">
+      <div class="copyhead"><span class="fn">新規プロジェクト作成</span><button class="copybtn" type="button">コピー</button></div>
+      <pre class="copy">clasp create --type sheets --title "プロジェクト名"
+clasp push --force</pre>
+    </div>
+    <p>これでスプレッドシートに紐づいたGASプロジェクトができます。<br>以降はClaude Code / Codexに「この機能を追加して」と頼むだけでローカルのコードが書き変わり、<code>clasp push --force</code>でクラウドに反映されます。</p>
+    <figure class="shot">
+      <div class="ph">スクショ差し込み予定：clasp create実行後のターミナル画面</div>
+    </figure>
+
+    <div class="callout ng"><span class="ct">⚠️ ここでほぼ全員が引っかかる関門</span>
+      実際に業務ツールをclasp化したときに、順番に全部踏みました。先に知っておけば数分で通過できます。
+    </div>
+
+    <h4>関門1：トークン期限切れ</h4>
+    <p><code>invalid_grant</code> / <code>invalid_rapt</code> というエラーが出たら、認証が切れています。<code>clasp login</code>で再認証してください。</p>
+
+    <h4>関門2：Apps Script APIが無効</h4>
+    <p><code>User has not enabled the Apps Script API</code>というエラーが出たら、<a href="https://script.google.com/home/usersettings" target="_blank" rel="noopener">Apps Scriptの設定ページ</a>でトグルをONにします（反映まで数分かかることがあります）。<br>一覧表示のような読み取り系コマンドは通っていても、作成系コマンドで初めて出るエラーです。</p>
+
+    <h4>関門3：clasp createがマニフェストを上書きする（★最重要）</h4>
+    <p><code>clasp create</code>で新規作成すると、権限設定（oauthScopes）が空の初期状態でマニフェストが上書きされます。<br>すでに動いていたGASを複製したつもりでも外部APIへのアクセス権限が消えてしまい、<code>403 ACCESS_TOKEN_SCOPE_INSUFFICIENT</code>のようなエラーで詰まります。</p>
+    <div class="callout ok"><span class="ct">対策</span>
+      create前に元の<code>appsscript.json</code>をバックアップしておき、作成後にoauthScopesの中身を復元してpushし直してください。
+    </div>
+
+    <h4>関門4：scopeを足しただけでは反映されない</h4>
+    <p>マニフェストに権限（scope）を追加してpushしても、それだけでは反映されません。<br>GASエディタを再読み込みし、関数を一度手動実行して再承認する必要があります。</p>
+
+    <h4>関門5：GASがGoogle管理のGCPにぶら下がる（★）</h4>
+    <p><code>clasp create</code>で作ると、Googleが管理する共有GCPプロジェクトの配下に置かれ、そこはAPIの有効化などの操作ができません。<br>外部APIを使おうとすると<code>403 SERVICE_DISABLED</code>のようなエラーになります。</p>
+    <div class="callout ok"><span class="ct">対策</span>
+      GASエディタの「プロジェクトの設定」→「GCPプロジェクトを変更」から、自分が管理者になっているGCPプロジェクト番号に付け替え、そのプロジェクト側でAPIを有効化します。
     </div>
     <figure class="shot">
-      <div class="ph">clasp実装手順の記事＋Loom動画（制作中・公開までにここに掲載します）</div>
-      <figcaption>ベース素材：JGO順位トラッカーでのclasp実機経験</figcaption>
+      <div class="ph">スクショ差し込み予定：関門3・5のエラー画面／GCPプロジェクト変更画面</div>
     </figure>
+
+    <h4>関門6：機能を足すたびにscopeが増える</h4>
+    <p>トリガー操作やGmail送信など、新しい機能を使うたびに必要なscopeが増えます。<br>「指定された権限では〜を呼び出すことができません」というエラーが出たら、該当のscopeをマニフェストに追加→push→GASエディタ再読込→関数を手動実行して再承認、の順で直します。</p>
+
+    <div class="callout"><span class="ct">Tips：ファイルが黙ってpushされないとき</span>
+      <code>.claspignore</code>を許可リスト形式（<code>**/**</code> + <code>!ファイル名</code>）で使っていると、後から追加したファイルが対象外のままpushされないことがあります。<br><code>clasp push</code>は成功したように表示されるので気づきにくいです。<code>clasp status</code>のTracked/Untrackedで確認するか、一時フォルダにcloneして実際に反映されているか確認するのが確実です。
+    </div>
   </section>
 
   <section class="chap" id="s12">
