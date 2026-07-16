@@ -260,17 +260,29 @@ figure.shot figcaption{font-size:12px;color:var(--ink-faint);margin-top:6px}
 h4[id^="work"]{scroll-margin-top:calc(var(--tabbar-h,52px) + var(--worktoc-h,44px) + 8px)}
 
 /* ============ FAQ ============ */
-details{border-top:1px solid var(--line-soft)}
-details:last-of-type{border-bottom:1px solid var(--line-soft)}
-summary{
+#t4 details{border-top:1px solid var(--line-soft)}
+#t4 details:last-of-type{border-bottom:1px solid var(--line-soft)}
+#t4 summary{
   cursor:pointer;list-style:none;display:flex;gap:14px;align-items:baseline;
   padding:var(--sp-2) 4px;font-weight:700;font-size:15px;line-height:1.6;
 }
-summary::-webkit-details-marker{display:none}
-summary .q{font-family:var(--mono);color:var(--accent);font-size:13px}
-summary::after{content:"＋";margin-left:auto;color:var(--ink-faint);font-weight:400}
-details[open] summary::after{content:"−"}
-details .a{padding:0 4px var(--sp-3) 34px;font-size:14.5px;color:var(--ink-sub)}
+#t4 summary::-webkit-details-marker{display:none}
+#t4 summary .q{font-family:var(--mono);color:var(--accent);font-size:13px}
+#t4 summary::after{content:"＋";margin-left:auto;color:var(--ink-faint);font-weight:400}
+#t4 details[open] summary::after{content:"−"}
+#t4 details .a{padding:0 4px var(--sp-3) 34px;font-size:14.5px;color:var(--ink-sub)}
+
+/* ============ 章アコーディオン（講義のあと） ============ */
+details.chap{padding:var(--sp-4) 0 0}
+details.chap > summary.chap-head{cursor:pointer;list-style:none}
+details.chap > summary.chap-head::-webkit-details-marker{display:none}
+details.chap > summary.chap-head::after{
+  content:"＋";margin-left:auto;color:var(--ink-faint);font-weight:400;
+  font-size:16px;line-height:1;padding-left:var(--sp-2);
+}
+details.chap[open] > summary.chap-head::after{content:"−"}
+details.chap > summary.chap-head:hover h3{color:var(--accent)}
+details.chap > summary.chap-head:hover::after{color:var(--accent)}
 
 /* ============ misc ============ */
 .goal{
@@ -1111,8 +1123,8 @@ a.txt{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
     今日作ったのはアンケート処理の仕組み1つですが、型（分解と変換・適材適所）は業務が変わっても同じです。<br>「これ、自分の業務でも使えますよね」——ここから先は、その転用を後押しするコンテンツです。
   </div>
 
-  <section class="chap" id="s9">
-    <div class="chap-head"><span class="no">A1</span><h3>転用例集：自分の業務に置き換える</h3></div>
+  <details class="chap" id="s9">
+    <summary class="chap-head"><span class="no">A1</span><h3>転用例集：自分の業務に置き換える</h3></summary>
     <p>今日の共通お題（注文データ＋顧客コメント）以外にも、個人情報が絡む定型業務は数多くあります。<br>使っているシステムに「CSVエクスポート」ボタンがあれば、今日の型に乗ります。<br>代表的な4業務の「列の扱い」を先に示します。</p>
 
     <div class="cards4 subnav" role="tablist" aria-label="転用例">
@@ -1179,10 +1191,10 @@ a.txt{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
       </table></div>
       <p class="note">狙い：参加者属性の傾向と満足度コメントを、個人を特定せず集計する。</p>
     </div>
-  </section>
+  </details>
 
-  <section class="chap" id="s10">
-    <div class="chap-head"><span class="no">A2</span><h3>スキル化に詰まったら</h3></div>
+  <details class="chap" id="s10">
+    <summary class="chap-head"><span class="no">A2</span><h3>スキル化に詰まったら</h3></summary>
     <p>当日「今の手順をスキルにして」で通らなかった場合や、家で自分の業務に転用するときに詰まったら、ここに戻ってきてください。</p>
 
     <h4>スキル化プロンプトの型</h4>
@@ -1199,10 +1211,10 @@ a.txt{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
       <li><strong>報告形式</strong>：集計の切り口（件数・割合・傾向コメント等）を毎回同じ形式に揃える</li>
       <li><strong>新傾向の別枠報告</strong>：どのカテゴリにも当てはまらない新しい傾向が出たときは、既存カテゴリに無理に押し込めず別枠で報告するようスキルに指示しておく</li>
     </ul>
-  </section>
+  </details>
 
-  <section class="chap" id="s11">
-    <div class="chap-head"><span class="no">A3</span><h3>claspで一歩先へ</h3></div>
+  <details class="chap" id="s11">
+    <summary class="chap-head"><span class="no">A3</span><h3>claspで一歩先へ</h3></summary>
     <p>今日のGASは、Googleのエディタ上でAIに書いてもらう形でした。<br>ここから先は、その一歩先——「こういう風にGASを使う世界もある」という紹介です。</p>
 
     <h4>claspとは</h4>
@@ -1247,48 +1259,42 @@ a.txt{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
 clasp push --force</pre>
     </div>
     <p>これでスプレッドシートに紐づいたGASプロジェクトができます。<br>以降はClaude Code / Codexに「この機能を追加して」と頼むだけでローカルのコードが書き変わり、<code>clasp push --force</code>でクラウドに反映されます。</p>
-    <figure class="shot">
-      <div class="ph">スクショ差し込み予定：clasp create実行後のターミナル画面</div>
-    </figure>
 
-    <div class="callout ng"><span class="ct">⚠️ ここでほぼ全員が引っかかる関門</span>
+    <div class="callout ng"><span class="ct">⚠️ つまづきやすいポイント</span>
       実際に業務ツールをclasp化したときに、順番に全部踏みました。先に知っておけば数分で通過できます。
     </div>
 
-    <h4>関門1：トークン期限切れ</h4>
+    <h4>① トークン期限切れ</h4>
     <p><code>invalid_grant</code> / <code>invalid_rapt</code> というエラーが出たら、認証が切れています。<code>clasp login</code>で再認証してください。</p>
 
-    <h4>関門2：Apps Script APIが無効</h4>
+    <h4>② Apps Script APIが無効</h4>
     <p><code>User has not enabled the Apps Script API</code>というエラーが出たら、<a href="https://script.google.com/home/usersettings" target="_blank" rel="noopener">Apps Scriptの設定ページ</a>でトグルをONにします（反映まで数分かかることがあります）。<br>一覧表示のような読み取り系コマンドは通っていても、作成系コマンドで初めて出るエラーです。</p>
 
-    <h4>関門3：clasp createがマニフェストを上書きする（★最重要）</h4>
+    <h4>③ clasp createがマニフェストを上書きする（★最重要）</h4>
     <p><code>clasp create</code>で新規作成すると、権限設定（oauthScopes）が空の初期状態でマニフェストが上書きされます。<br>すでに動いていたGASを複製したつもりでも外部APIへのアクセス権限が消えてしまい、<code>403 ACCESS_TOKEN_SCOPE_INSUFFICIENT</code>のようなエラーで詰まります。</p>
     <div class="callout ok"><span class="ct">対策</span>
       create前に元の<code>appsscript.json</code>をバックアップしておき、作成後にoauthScopesの中身を復元してpushし直してください。
     </div>
 
-    <h4>関門4：scopeを足しただけでは反映されない</h4>
+    <h4>④ scopeを足しただけでは反映されない</h4>
     <p>マニフェストに権限（scope）を追加してpushしても、それだけでは反映されません。<br>GASエディタを再読み込みし、関数を一度手動実行して再承認する必要があります。</p>
 
-    <h4>関門5：GASがGoogle管理のGCPにぶら下がる（★）</h4>
+    <h4>⑤ GASがGoogle管理のGCPにぶら下がる（★）</h4>
     <p><code>clasp create</code>で作ると、Googleが管理する共有GCPプロジェクトの配下に置かれ、そこはAPIの有効化などの操作ができません。<br>外部APIを使おうとすると<code>403 SERVICE_DISABLED</code>のようなエラーになります。</p>
     <div class="callout ok"><span class="ct">対策</span>
       GASエディタの「プロジェクトの設定」→「GCPプロジェクトを変更」から、自分が管理者になっているGCPプロジェクト番号に付け替え、そのプロジェクト側でAPIを有効化します。
     </div>
-    <figure class="shot">
-      <div class="ph">スクショ差し込み予定：関門3・5のエラー画面／GCPプロジェクト変更画面</div>
-    </figure>
 
-    <h4>関門6：機能を足すたびにscopeが増える</h4>
+    <h4>⑥ 機能を足すたびにscopeが増える</h4>
     <p>トリガー操作やGmail送信など、新しい機能を使うたびに必要なscopeが増えます。<br>「指定された権限では〜を呼び出すことができません」というエラーが出たら、該当のscopeをマニフェストに追加→push→GASエディタ再読込→関数を手動実行して再承認、の順で直します。</p>
 
     <div class="callout"><span class="ct">Tips：ファイルが黙ってpushされないとき</span>
       <code>.claspignore</code>を許可リスト形式（<code>**/**</code> + <code>!ファイル名</code>）で使っていると、後から追加したファイルが対象外のままpushされないことがあります。<br><code>clasp push</code>は成功したように表示されるので気づきにくいです。<code>clasp status</code>のTracked/Untrackedで確認するか、一時フォルダにcloneして実際に反映されているか確認するのが確実です。
     </div>
-  </section>
+  </details>
 
-  <section class="chap" id="s12">
-    <div class="chap-head"><span class="no">A4</span><h3>ダッシュボードを公開する</h3></div>
+  <details class="chap" id="s12">
+    <summary class="chap-head"><span class="no">A4</span><h3>ダッシュボードを公開する</h3></summary>
     <p>作業⑥で作ったダッシュボードのHTMLファイルは、まだ自分のPCの中にあるだけです。<br>チームに共有するにはURLにして「公開（デプロイ）」する必要があります。<br>方法を5つ、目的別に紹介します。カードをクリックすると、その方法の手順に切り替わります。</p>
 
     <div class="pubgrid subnav" id="pubNav" role="tablist" aria-label="公開方法">
@@ -1390,7 +1396,7 @@ clasp push --force</pre>
     </div>
 
     <p class="note">公開URLはチームのチャットやメールで共有すれば、毎月そこを見るだけで済むようになります。</p>
-  </section>
+  </details>
 </div>
 
 <!-- ==================== TAB 5: FAQ ==================== -->
@@ -1489,8 +1495,13 @@ function route(){
   if (tab) {
     showTab(tab, false);
     const el = document.getElementById(h);
-    if (el) el.scrollIntoView();
+    if (el) { openChap(el); el.scrollIntoView(); }
   }
+}
+
+// 章アコーディオン（講義のあと）：リンクで飛んだら開いた状態にする
+function openChap(el){
+  if (el && el.tagName === 'DETAILS') el.open = true;
 }
 window.addEventListener('hashchange', route);
 route();
@@ -1503,7 +1514,7 @@ document.querySelectorAll('.local a').forEach(a => {
     history.replaceState(null,'','#'+id);
     route();
     const el = document.getElementById(id);
-    if (el) el.scrollIntoView({behavior:'smooth'});
+    if (el) { openChap(el); el.scrollIntoView({behavior:'smooth'}); }
   });
 });
 
