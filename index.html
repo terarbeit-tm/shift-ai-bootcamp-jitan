@@ -543,6 +543,15 @@ a.txt{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
     今日のワークは<strong>Claude Code / Codexのどちらでも</strong>同じ手順で進められます。<br><strong>「依頼の型」自体がツール非依存</strong>だからです。<br>座学でもClaude Code・Codexそれぞれの実例を見せて、同じ型が両方で通ることを確認します。<br>細かい手順差が出る箇所は、本ガイドの各所にこの色のボックスで添えています。
   </div>
 
+  <h4>今日出てくる3つの言葉</h4>
+  <p>聞き慣れない言葉が出てきたら、ここに戻ってきてください。</p>
+  <div class="tblwrap"><table>
+    <tr><th>言葉</th><th>意味</th></tr>
+    <tr><td><b>マスキング</b></td><td>個人情報を伏せること。消すのではなく「誰か分からない形」に置き換えます</td></tr>
+    <tr><td><b>トリアージ</b></td><td>仕分けのこと。もとは医療現場で「手当ての順番を決める」意味の言葉です。<br>今日は「渡していいデータか」「誰にやらせるか」の2回、仕分けをします</td></tr>
+    <tr><td><b>複利</b></td><td>積み上がって効くこと。1回30分の削減が、毎月・ずっと効き続けます</td></tr>
+  </table></div>
+
   <h4>覚えて帰る型（これだけ）</h4>
   <div class="flowline">分解できるか？ <b>／</b> 変換できるか？ <b>→</b> 適材適所で組み合わせる <b>→</b> 仕組み化（複利）</div>
   <p class="note">今日作るのはアンケート処理の仕組み1つですが、型は自分のどの業務にも応用できます。<br>「講義のあと」タブに転用例集を用意しています。</p>
@@ -839,7 +848,7 @@ a.txt{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
       <li>スプレッドシートの「拡張機能」→「Apps Script」を開く</li>
       <li>エディタの中身をすべて消して、AIが書いたGASを全文貼り付ける</li>
       <li>保存（💾アイコン または Ctrl+S / ⌘+S）→ スプレッドシートのタブに戻って、ページを再読み込みする</li>
-      <li>メニューに「マスキング」が増えているので、そこから実行する（初回は認可画面が出ます。当日は全員でいったん手を止めて案内します。詳しくはFAQ Q5）</li>
+      <li>メニューに「マスキング」が増えているので、そこから実行する（初回は認可画面が出ます。当日は全員でいったん手を止めて案内します。詳しくはFAQ Q6）</li>
       <li><code>masked</code>シートに、個人情報が消えたデータが出ているか確認する</li>
     </ol>
 
@@ -1364,40 +1373,44 @@ clasp push --force</pre>
 <div class="panel" id="t4">
   <div class="panel-head">
     <span class="kicker">Troubleshooting</span>
-    <h2>詰まったときは</h2>
-    <p class="desc">当日よくある詰まりを集めました。<br>質問を開くと答えが出ます。</p>
+    <h2>よくある質問</h2>
+    <p class="desc">はじめる前の不安と、当日よくある詰まりを集めました。<br>質問を開くと答えが出ます。</p>
   </div>
 
   <details>
-    <summary><span class="q">Q1</span>質問したいとき</summary>
+    <summary><span class="q">Q1</span>スプレッドシートに個人情報を入れて大丈夫なんですか？</summary>
+    <div class="a">今日配るデータはダミーです。<br>実在の個人情報は入っていないので、そのまま進めて大丈夫です。<br><br>そのうえで、この不安には大事な区別が隠れています。<strong>「スプレッドシートに置く」と「AIに渡す」は別の話</strong>です。<br>スプレッドシートはあなたのGoogleアカウントの中にあります。<br>GASもGoogleの中だけで動くので、生データが外部のAIに送られることはありません。<br>今日やるのは後者＝「AIに渡す前に、渡せる形に変える」ことです。<br>だから最初にGASでマスキングします。<br><br>自分の実データに置き換えるときの基準は、あなたの会社のルールです。<br>すでに業務でそのデータをスプレッドシートで扱っているなら、置き場所は今までと変わりません。<br>扱っていないなら、置き場所だけ会社が許可した環境に替えてください。<br>今日の型（分解する→渡せる形に変える）はそのまま使えます。</div>
+  </details>
+  <details>
+    <summary><span class="q">Q2</span>質問したいとき</summary>
     <div class="a">質問はチャットへ投稿してください。<br>作業中は区切りごとにまとめて回答します。<br>すぐ拾えない質問も、後で必ず拾います。</div>
   </details>
   <details>
-    <summary><span class="q">Q2</span>作業中の説明を聞き逃した</summary>
+    <summary><span class="q">Q3</span>作業中の説明を聞き逃した</summary>
     <div class="a">サイレント作業ブロック中は講師トークを止めています。<br>作業が一区切りついたタイミングで、要点をもう一度まとめて共有します。<br>このガイドの該当セクションもあわせて見返してください。</div>
   </details>
   <details>
-    <summary><span class="q">Q3</span>手順が人によって分かれた（分岐が発生した）</summary>
+    <summary><span class="q">Q4</span>手順が人によって分かれた（分岐が発生した）</summary>
     <div class="a">環境差により一部の人だけ別手順になることがあります。<br>分岐が起きたら、講師が全員の手を止めて「今から2つに分かれます・あなたはどちらか」を案内します。<br>慌てず、案内に従ってください。</div>
   </details>
   <details>
-    <summary><span class="q">Q4</span>マスク済みCSVや出力ファイルがどこにあるか分からない</summary>
+    <summary><span class="q">Q5</span>マスク済みCSVや出力ファイルがどこにあるか分からない</summary>
     <div class="a">今日の作業フォルダの中を確認してください。<br>ワーク開始前に「あなたのファイルはここに出る」を実画面で確認しています。<br>見当たらない場合は、ダウンロードフォルダも確認してください。</div>
   </details>
   <details>
-    <summary><span class="q">Q5</span>GASの認可画面で止まった</summary>
+    <summary><span class="q">Q6</span>GASの認可画面で止まった</summary>
     <div class="a">初回実行時は必ず認可画面が出ます。<br>「詳細」→「（プロジェクト名）に移動」と進めば許可できます。<br>Googleアカウントでのログインが必要です。</div>
   </details>
   <details>
-    <summary><span class="q">Q6</span>生成に失敗した・変なものが出た</summary>
+    <summary><span class="q">Q7</span>生成に失敗した・変なものが出た</summary>
     <div class="a">もう一度頼めばOKです。<br>30点でOK、エージェントは育てるもの。<br>うまくいかない場合は「列ごとの扱い」を依頼文にもう一度明記して頼み直してください。</div>
   </details>
   <details>
-    <summary><span class="q">Q7</span>隣の人と違う動きをする</summary>
+    <summary><span class="q">Q8</span>隣の人と違う動きをする</summary>
     <div class="a">それが正常です。<br>エージェントは毎回まったく同じには動きません。<br>出てきたものが要件を満たしていればOKです。</div>
   </details>
   <details>
-    <summary><span class="q">Q8</span>Codexでも同じ手順でできますか？</summary>
+    <summary><span class="q">Q9</span>Codexでも同じ手順でできますか？</summary>
     <div class="a">できます。<br>依頼の型（5要素・スキル化の言葉づかい）はツール非依存なので、Claude Code / Codexどちらでもそのまま使えます。<br>当日の実演デモはClaude Codeで見せますが、手順はCodexでも同じです。<br>細かい手順差がある箇所は、各セクションの水色のボックスに補足しています。</div>
   </details>
 
